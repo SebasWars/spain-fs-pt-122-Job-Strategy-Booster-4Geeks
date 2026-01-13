@@ -1,52 +1,45 @@
-import React, { useEffect } from "react"
-import rigoImageUrl from "../assets/img/rigo-baby.jpg";
-import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-export const Home = () => {
+import "../styles/home.css";
+import HomeStatisticsCard from "../Components/HomeStatisticsCard";
 
-	const { store, dispatch } = useGlobalReducer()
-
-	const loadMessage = async () => {
-		try {
-			const backendUrl = import.meta.env.VITE_BACKEND_URL
-
-			if (!backendUrl) throw new Error("VITE_BACKEND_URL is not defined in .env file")
-
-			const response = await fetch(backendUrl + "/api/hello")
-			const data = await response.json()
-
-			if (response.ok) dispatch({ type: "set_hello", payload: data.message })
-
-			return data
-
-		} catch (error) {
-			if (error.message) throw new Error(
-				`Could not fetch the message from the backend.
-				Please check if the backend is running and the backend port is public.`
-			);
-		}
-
-	}
-
-	useEffect(() => {
-		loadMessage()
-	}, [])
-
+function HomePage() {
 	return (
-		<div className="text-center mt-5">
-			<h1 className="display-4">Hello Rigo!!</h1>
-			<p className="lead">
-				<img src={rigoImageUrl} className="img-fluid rounded-circle mb-3" alt="Rigo Baby" />
-			</p>
-			<div className="alert alert-info">
-				{store.message ? (
-					<span>{store.message}</span>
-				) : (
-					<span className="text-danger">
-						Loading message from the backend (make sure your python 🐍 backend is running)...
-					</span>
-				)}
+		<div className="home_display">
+			<div className="header_bar">
+				<FontAwesomeIcon className="notification_icon" icon={faBell} />
+
+				<div className="user_data">
+					<div className="user_personal_information">
+						<h3>Nombre del usuario</h3>
+						<p>correodelusuario@gmailcom</p>
+					</div>
+
+					<div className="user_picture"></div>
+				</div>
+			</div>
+
+			<div className="home_body">
+				<div className="left_side">
+					<div className="statistics">
+						<HomeStatisticsCard title={'Postulaciones'} quantity={10} date={'12/01/2026'} />
+						<HomeStatisticsCard title={'Entrevistas'} quantity={5} date={'12/01/2026'} />
+						<HomeStatisticsCard title={'Descartado'} quantity={0} date={'12/01/2026'} />
+					</div>
+
+					<div className="chart_table">
+						<h3>Vista general de las postulaciones</h3>
+					</div>
+
+					<div className="widgets"></div>
+				</div>
+
+
+				<div className="rigth_side"></div>
 			</div>
 		</div>
 	);
-}; 
+}
+
+export default HomePage;
