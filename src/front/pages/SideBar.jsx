@@ -28,6 +28,10 @@ function Sidebar() {
                     <NavBarButton icon={faClipboardList} label="Postulaciones" to="/Jobs" />
                     <NavBarButton icon={faBookBookmark} label="Curriculums" to="/Curriculum" />
                     <NavBarButton icon={faHandshake} label="Entrevista" to="/Interview" />
+                    <NavBarButton icon={faClipboardList} label="PostulacionesDetail" to="/jobId" />
+
+
+
                 </div>
             </div>
 
