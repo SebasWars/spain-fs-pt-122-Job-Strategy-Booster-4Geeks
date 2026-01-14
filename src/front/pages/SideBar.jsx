@@ -11,8 +11,9 @@ import {
     faGear,
     faCircleQuestion,
     faRightFromBracket,
+    faUserPlus,
+    faRightToBracket,
 } from "@fortawesome/free-solid-svg-icons";
-
 
 function Sidebar() {
     return (
@@ -26,7 +27,7 @@ function Sidebar() {
                 <h4>Menu</h4>
                 <div className="nav_bar_buttons">
                     <NavBarButton icon={faHouse} label="Home" to="/" />
-                    <NavBarButton icon={faClipboardList} label="Postulaciones" to="/register" />
+                    <NavBarButton icon={faClipboardList} label="Postulaciones" to="/postulaciones" />
                     <NavBarButton icon={faBookBookmark} label="Curriculums" />
                     <NavBarButton icon={faHandshake} label="Entrevista" />
                 </div>
@@ -37,6 +38,8 @@ function Sidebar() {
                 <div className="tools_buttons">
                     <NavBarButton icon={faGear} label={"Ajustes"} />
                     <NavBarButton icon={faCircleQuestion} label={"Ayuda"} />
+                    <NavBarButton icon={faUserPlus} label={"Register"} to="/register" />
+                    <NavBarButton icon={faRightToBracket} label={"Login"} to="/login" />
                     <NavBarButton icon={faRightFromBracket} label={"Salir"} />
                 </div>
             </div>
