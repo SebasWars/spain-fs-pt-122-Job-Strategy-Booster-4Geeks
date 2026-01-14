@@ -1,22 +1,15 @@
-import React from 'react';
+import React from 'react'
+import Sidebar from './SideBar'
+import { Outlet } from 'react-router-dom'
+import "../styles/app.css"
 
-
-import '../styles/app.css'
-import Registration from './RegisterPage';
-import HomePage from './HomePage';
-import Sidebar from './SideBar';
-import Layout from './Layout';
-
-const App = () => {
+export default function App() {
     return (
-        <>
-            <Layout />
-
-        </>
-
-
-
-    );
-};
-
-export default App;
+        <div className='main_container'>
+            <Sidebar />
+            <div className='display_component' >
+                <Outlet />
+            </div>
+        </div>
+    )
+}

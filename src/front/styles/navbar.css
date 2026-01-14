@@ -9,13 +9,11 @@
 .side_bar {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   padding: 20px;
   box-sizing: border-box;
   background-color: var(--back-color);
-  border-radius: 10px;   
-   border: 2px solid blue;
-
+  border-radius: 10px;
 }
 
 .side_bar .header {
@@ -53,10 +51,17 @@
   margin-top: auto;
 }
 
+.side_bar .nav_bar_buttons a,
+.side_bar .tools_buttons a {
+  text-decoration: none;
+  color: var(--font-color);
+}
+
 .side_bar .nav_bar_buttons,
 .side_bar .tools_buttons {
   display: flex;
   flex-direction: column;
+  text-decoration: none;
 
   .nav_bar_button {
     .icon {

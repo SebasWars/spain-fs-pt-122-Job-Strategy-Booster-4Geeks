@@ -1,7 +1,5 @@
 import NavBarButton from "../components/NavBarButton";
-import "../styles/layout.css";
-
-import { Link } from 'react-router-dom';
+import "../styles/navbar.css";
 
 import {
     faHouse,
@@ -26,9 +24,9 @@ function Sidebar() {
                 <h4>Menu</h4>
                 <div className="nav_bar_buttons">
                     <NavBarButton icon={faHouse} label="Home" to="/" />
-                    <NavBarButton icon={faClipboardList} label="Postulaciones" to="/register" />
-                    <NavBarButton icon={faBookBookmark} label="Curriculums" />
-                    <NavBarButton icon={faHandshake} label="Entrevista" />
+                    <NavBarButton icon={faClipboardList} label="Postulaciones" to="/Jobs" />
+                    <NavBarButton icon={faBookBookmark} label="Curriculums" to="/Curriculum" />
+                    <NavBarButton icon={faHandshake} label="Entrevista" to="/Interview" />
                 </div>
             </div>
 

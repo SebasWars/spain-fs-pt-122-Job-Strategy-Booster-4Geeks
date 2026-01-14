@@ -10,8 +10,9 @@
   display: flex;
   width: 100%;
   flex-direction: column;
+  height: 100vh;
+  overflow: scroll;
   gap: 10px;
-  border: 2px solid black;
 }
 
 /* ---------- HEADER HOME STYLES ---------- */
@@ -33,7 +34,6 @@
 .header_bar .user_data {
   display: flex;
   align-items: center;
-  border: 2px solid black;
 
   .user_personal_information h3 {
     font-size: 16px;
@@ -104,6 +104,7 @@
 /* ---------- WIDGETS HOME STYLES ---------- */
 
 .widgets {
+  height: 100vh;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
