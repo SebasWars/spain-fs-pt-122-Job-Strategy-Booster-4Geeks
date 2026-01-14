@@ -5,13 +5,12 @@ const GraficoDinamico = () => {
     const [stats, setStats] = useState([]);
 
     useEffect(() => {
-        // Simulación de API
         setTimeout(() => {
             setStats([
-                { name: "Postulaciones", value: 10 },
-                { name: "Entrevistas", value: 2 },
-                { name: "Ofertas", value: 2 },
-                { name: "Descartado", value: 2 }
+                { name: "Postulaciones", value: 10, color: "#25d568ff" },
+                { name: "Entrevistas", value: 5, color: "#3662dcff" },
+                { name: "Ofertas", value: 2, color: "#c1ef36ff" },
+                { name: "Descartado", value: 3, color: "#e83636ff" }
             ]);
         }, 1000);
     }, []);
@@ -19,11 +18,12 @@ const GraficoDinamico = () => {
     const option = {
         series: [
             {
-                type: "pie",
-                radius: ["50%", "80%"],
-                label: { show: false },
-                labelLine: { show: false },
-                data: stats
+                type: 'pie',
+                radius: ['50%', '70%'],
+                data: stats.map((item, index) => ({
+                    ...item,
+                    itemStyle: { color: item.color }
+                }))
             }
         ]
     };
@@ -37,7 +37,7 @@ const GraficoDinamico = () => {
 
             <div className="grafico_stats">
                 {stats.map((item) => (
-                    <div key={item.name} className="grafico_stat">
+                    <div key={item.name} className="grafico_stat" style={{ '--stat-color': item.color }}>
                         <span className="grafico_label">{item.name}</span>
                         <span className="grafico_value">{item.value}</span>
                     </div>
