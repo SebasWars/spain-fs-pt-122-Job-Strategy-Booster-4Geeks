@@ -36,8 +36,6 @@ function Sidebar() {
                 <div className="tools_buttons">
                     <NavBarButton icon={faGear} label={"Ajustes"} />
                     <NavBarButton icon={faCircleQuestion} label={"Ayuda"} />
-                    <NavBarButton icon={faUserPlus} label={"Register"} to="/register" />
-                    <NavBarButton icon={faRightToBracket} label={"Login"} to="/login" />
                     <NavBarButton icon={faRightFromBracket} label={"Salir"} />
                 </div>
             </div>
