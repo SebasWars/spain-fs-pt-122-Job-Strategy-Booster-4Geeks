@@ -12,6 +12,8 @@ import App from "./pages/App";
 import Curriculums from "./pages/Curriculum";
 import Interview from "./pages/Interview";
 import PerfilUsuario from "./pages/PerfilUsuario";
+import Formulario from "./pages/Formulario";
+
 
 
 export const router = createBrowserRouter(
@@ -24,6 +26,8 @@ export const router = createBrowserRouter(
       <Route path="register" element={<Registration />} />
       <Route path="login" element={<LoginForm />} />
       <Route path="/perfil" element={<PerfilUsuario />} />
+      <Route path="/formulario" element={<Formulario />} />
+
     </Route>
 
   )
