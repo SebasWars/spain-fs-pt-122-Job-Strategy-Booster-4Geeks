@@ -9,8 +9,8 @@
 .side_bar {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 10px;
+  min-height: 100vh;
+  padding: 20px;
   box-sizing: border-box;
   background-color: var(--back-color);
   border-radius: 10px;

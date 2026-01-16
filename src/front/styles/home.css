@@ -9,9 +9,11 @@
 .home_display {
   display: flex;
   width: 100%;
+  height: 100vh;
   flex-direction: column;
   height: auto;
   gap: 10px;
+  overflow: scroll;
 }
 
 /* ---------- HEADER HOME STYLES ---------- */
@@ -182,15 +184,16 @@
   top: 10%;
   left: -2px;
   height: 70%;
-  width: 5px;
+  width: 8px;
+  border-radius: 2px;
   position: absolute;
   background-color: var(--stat-color);
-  border-radius: 10px;
 }
 
 .grafico_label {
   display: block;
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 700;
   color: #666;
 }
 
