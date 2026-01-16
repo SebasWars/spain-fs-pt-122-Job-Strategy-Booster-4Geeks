@@ -29,7 +29,6 @@ def handle_hello():
 @api.route('/register', methods=["POST"])
 def register():
     data = request.get_json()
-    print("Received data:", data)  # <-- Debug log
 
     username = data.get('username')
     email = data.get('email')
