@@ -9,15 +9,24 @@
 .main_container {
   display: flex;
   width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
   gap: 10px;
+  padding: 10px;
   background-color: var(--card-color);
 }
+
 .display_component {
+  display: flex;
+  gap: 15px;
   width: 100%;
+}
+
+.main_content {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
+  width: 100%;
   overflow: scroll;
+  gap: 10px;
 }
 
 .header_bar {
@@ -27,11 +36,9 @@
   justify-content: flex-end;
   padding: 6px 10px;
   border-radius: 10px;
-  position: sticky;
-  top: 0px;
-  z-index: 1000;
-  .notification_icon {
-    margin-right: 15px;
-    font-size: 25px;
-  }
+}
+
+.notification_icon {
+  margin-right: 15px;
+  font-size: 25px;
 }
