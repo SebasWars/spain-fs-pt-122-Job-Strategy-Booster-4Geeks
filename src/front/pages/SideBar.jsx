@@ -38,36 +38,21 @@ function Sidebar() {
             <div className="nav_bar">
                 <h4>Menu</h4>
                 <div className="nav_bar_buttons">
-                    {token ? (
-                        <>
-                            <NavBarButton icon={faHouse} label="Home" to="/" />
-                            <NavBarButton icon={faClipboardList} label="Postulaciones" to="/Jobs" />
-                            <NavBarButton icon={faBookBookmark} label="Curriculums" to="/Curriculum" />
-                            <NavBarButton icon={faHandshake} label="Entrevista" to="/Interview" />
-                            <NavBarButton icon={faFileLines} label="Formulario" to="/formulario" />
-                            <NavBarButton icon={faClipboardList} label="PostulacionesDetail" to="/jobId" />
-                        </>
-                    ) : null}
+                    <NavBarButton icon={faHouse} label="Home" to="/" />
+                    <NavBarButton icon={faClipboardList} label="Postulaciones" to="/Jobs" />
+                    <NavBarButton icon={faBookBookmark} label="Curriculums" to="/Curriculum" />
+                    <NavBarButton icon={faHandshake} label="Entrevista" to="/Interview" />
+                    <NavBarButton icon={faFileLines} label="Formulario" to="/formulario" />
+                    <NavBarButton icon={faClipboardList} label="PostulacionesDetail" to="/jobId" />
                 </div>
             </div>
 
             <div className="general">
                 <h4>General</h4>
                 <div className="tools_buttons">
-                    {token ? (
-                        <>
-                            <NavBarButton icon={faGear} label={"Ajustes"} />
-                            <NavBarButton icon={faCircleQuestion} label={"Ayuda"} />
-                            <NavBarButton icon={faUser} label="Perfil" to="/perfil" />
-
-                            <button className="btn btn-secondary mt-2" onClick={handleLogout}> Logout</button>
-
-                        </>
-                    ) : (
-                        <>
-                            <NavBarButton icon={faClipboardList} label="Login" to="/register" />
-                        </>
-                    )}
+                    <NavBarButton icon={faGear} label={"Ajustes"} />
+                    <NavBarButton icon={faCircleQuestion} label={"Ayuda"} />
+                    <button className="btn btn-secondary mt-2" onClick={handleLogout}> Logout</button>
                 </div>
             </div>
         </div>
