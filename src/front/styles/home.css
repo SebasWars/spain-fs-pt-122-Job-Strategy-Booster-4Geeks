@@ -4,6 +4,16 @@
   --font-color: #1b1b1b;
   --ligther-font-color: #6f6f6f;
   --main-color: #2b4eeb;
+  --main-color-hover: #6b82ec;
+}
+
+[data-theme="dark"] {
+  --back-color: #0f1115;
+  --card-color: #1c1f26;
+  --font-color: #e6e6e6;
+  --ligther-font-color: #a1a1aa;
+  --main-color: #4c6fff;
+  --main-color-hover: #6e8bff;
 }
 
 /* ---------- HOME GRID STYLES ---------- */
@@ -61,6 +71,7 @@
   display: flex;
   align-items: center;
   background-color: var(--back-color);
+  color: var(--font-color);
   padding: 2px 20px;
   border-radius: 10px;
 
@@ -131,8 +142,8 @@
 
 .menu_options {
   display: inline-flex;
-  background-color: #ffffff;
-  border: 1px solid var(--card-color);
+  background-color: var(--back-color);
+  border: 3px solid var(--card-color);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -153,12 +164,13 @@
 }
 
 .menu_options button:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: var(--main-color-hover);
+  color: var(--back-color);
 }
 
 .menu_options button.active {
   background-color: var(--main-color);
-  color: #ffffff;
+  color: var(--back-color);
 }
 
 .menu_options button:focus,
@@ -192,12 +204,13 @@
   display: block;
   font-size: 18px;
   font-weight: 700;
-  color: #666;
+  color: var(--ligther-font-color);
 }
 
 .grafico_value {
   font-size: 30px;
   font-weight: 600;
+  color: var(--font-color);
 }
 
 /* ---------- CALENDAR WIDGET STYLES ---------- */
@@ -232,7 +245,7 @@
 .fc .fc-button-primary:not(:disabled).fc-button-active {
   background-color: var(--main-color);
   border-color: var(--main-color);
-  color: #ffffff;
+  color: var();
 }
 
 /* Celdas */
@@ -244,7 +257,7 @@
 
 /* Día actual */
 .fc .fc-day-today {
-  background-color: rgba(0, 47, 255, 0.08);
+  background-color: var(--card-color);
 }
 
 /* Números de día */
@@ -256,7 +269,7 @@
 .fc .fc-event {
   background-color: var(--main-color);
   border-color: var(--main-color);
-  color: #ffffff;
+  color: var(--back-color);
   border-radius: 6px;
   font-size: 0.75rem;
   padding: 2px 4px;
@@ -286,7 +299,7 @@
 }
 
 .fc .fc-list-event:hover td {
-  background-color: rgba(43, 78, 235, 0.08);
+  background-color: var(--main-color-hover);
 }
 
 /* Quitar sombras por defecto */
@@ -305,7 +318,7 @@
 .fc .fc-button-primary:not(:disabled):active {
   background-color: var(--main-color) !important;
   border-color: var(--main-color) !important;
-  color: #ffffff !important;
+  color: var(--back-color) !important;
 }
 
 /* Quitar cualquier sombra u outline */
