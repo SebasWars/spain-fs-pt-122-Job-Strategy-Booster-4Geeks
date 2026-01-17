@@ -1,4 +1,4 @@
-import React, { useState, createContext } from 'react';
+import React, { useState, createContext, useEffect } from 'react';
 
 // Create and export the context here
 export const UserContext = createContext();
@@ -21,10 +21,7 @@ export default function UserContextProvider({ children }) {
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme) return savedTheme;
 
-
-        return window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
+        return "light";
     };
 
     const [theme, setTheme] = useState(getInitialTheme);
