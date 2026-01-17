@@ -14,7 +14,7 @@ import {
 
 import { UserContext } from "../hooks/UserContextProvier.jsx";
 import { useNavigate } from "react-router-dom";
-import LoadingScreen from "../components/LoadingScreen"; // Adjust the path
+import LoadingScreen from "../components/LoadingScreen";
 
 function Sidebar() {
     const [loading, setLoading] = useState(false);
