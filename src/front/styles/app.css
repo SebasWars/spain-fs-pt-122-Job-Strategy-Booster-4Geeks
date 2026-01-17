@@ -4,6 +4,16 @@
   --font-color: #1b1b1b;
   --ligther-font-color: #6f6f6f;
   --main-color: #2b4eeb;
+  --main-color-hover: #6b82ec;
+}
+
+[data-theme="dark"] {
+  --back-color: #0f1115;
+  --card-color: #1c1f26;
+  --font-color: #e6e6e6;
+  --ligther-font-color: #a1a1aa;
+  --main-color: #4c6fff;
+  --main-color-hover: #6e8bff;
 }
 
 .main_container {
@@ -28,19 +38,27 @@
   gap: 10px;
 }
 
-.header_bar {
-  background-color: var(--back-color);
+.header_bar .user_data {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 6px 10px;
+  width: 100%;
+  padding: 8px 10px;
   border-radius: 10px;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
 }
 
-.notification_icon {
-  margin-right: 15px;
-  font-size: 25px;
+  .notification_icon {
+    font-size: 25px;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+
+  .user_picture {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin: 0 15px;
+    background-color: var(--main-color);
+    cursor: pointer;
+  }
 }

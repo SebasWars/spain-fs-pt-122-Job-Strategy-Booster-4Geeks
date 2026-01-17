@@ -10,15 +10,6 @@ import LoadingScreen from "../components/LoadingScreen";
 
 export default function App() {
     const { token, user } = useContext(UserContext);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setLoading(false);
-        }, 1500);
-
-        return () => clearTimeout(timer);
-    }, []);
 
     if (!token) {
         return <Registration />;
@@ -34,8 +25,11 @@ export default function App() {
                 <Sidebar />
                 <div className="main_content">
                     <header className="header_bar">
-                        <FontAwesomeIcon className="notification_icon" icon={faBell} />
                         <div className="user_data">
+                            <FontAwesomeIcon className="notification_icon" icon={faBell} />
+                            <button onClick={toggleTheme}>
+                                {theme === "dark" ? "Modo claro" : "Modo oscuro"}
+                            </button>
                             <div className="user_personal_information">
                                 <h3>Hello, {user.username}</h3>
                                 <p>{user.email}</p>
