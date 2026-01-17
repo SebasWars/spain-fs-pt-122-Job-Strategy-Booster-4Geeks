@@ -5,14 +5,12 @@ const GraficoDinamico = () => {
     const [stats, setStats] = useState([]);
 
     useEffect(() => {
-        setTimeout(() => {
-            setStats([
-                { name: "Postulaciones", value: 10, color: "#338fe1ff" },
-                { name: "Entrevistas", value: 5, color: "#8462bfff" },
-                { name: "Ofertas", value: 2, color: "#4c9e50ff" },
-                { name: "Descartado", value: 10, color: "#e44441ff" }
-            ]);
-        }, 1000);
+        setStats([
+            { name: "Postulaciones", value: 10, color: "#338fe1ff" },
+            { name: "Entrevistas", value: 5, color: "#8462bfff" },
+            { name: "Ofertas", value: 2, color: "#4c9e50ff" },
+            { name: "Descartado", value: 10, color: "#e44441ff" }
+        ]);
     }, []);
 
 
