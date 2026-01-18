@@ -27,34 +27,7 @@
   min-height: 100vh;
 }
 
-/* ---------- HEADER HOME STYLES ---------- */
-
-
-.header_bar .user_data {
-  display: flex;
-  align-items: center;
-
-  .user_personal_information h3 {
-    font-size: 16px;
-    margin: 0 10px;
-  }
-
-  .user_personal_information p {
-    font-size: 15px;
-    margin: 0 10px;
-  }
-
-  .user_picture {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin: 0 15px;
-    background-color: var(--main-color);
-    cursor: pointer;
-  }
-}
-
-/* ---------- BODY HOME STYLES ---------- */
+/* ---------- HOME WIDGETS POSITION STYLES ---------- */
 
 .statistics_container {
   display: grid;
@@ -71,7 +44,6 @@
   background-color: var(--back-color);
   padding: 10px;
   border-radius: 10px;
-  overflow: scroll;
 }
 
 .grafica {
@@ -183,7 +155,9 @@
   font-size: 0.875rem;
   color: var(--font-color);
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .menu_options button:not(:last-child) {

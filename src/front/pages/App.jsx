@@ -9,7 +9,17 @@ import Registration from './RegisterPage.jsx';
 import LoadingScreen from "../components/LoadingScreen";
 
 export default function App() {
-    const { token, user } = useContext(UserContext);
+    const { token, user, theme, toggleTheme } = useContext(UserContext);
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setLoading(false);
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     if (!token) {
         return <Registration />;
@@ -24,10 +34,10 @@ export default function App() {
             <div className="display_component">
                 <Sidebar />
                 <div className="main_content">
-                    <header className="header_bar">
+                    <div className="header_bar">
                         <div className="user_data">
                             <FontAwesomeIcon className="notification_icon" icon={faBell} />
-                            <button onClick={toggleTheme}>
+                            <button className='btn btn-secondary' onClick={toggleTheme}>
                                 {theme === "dark" ? "Modo claro" : "Modo oscuro"}
                             </button>
                             <div className="user_personal_information">
@@ -38,7 +48,7 @@ export default function App() {
                                 <div className="user_picture"></div>
                             </Link>
                         </div>
-                    </header>
+                    </div>
                     <Outlet />
                 </div>
             </div>
