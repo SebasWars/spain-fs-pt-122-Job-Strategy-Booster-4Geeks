@@ -59,6 +59,9 @@ Thumbs.db
 *.tar
 *.zip
 
+# ignore environment variable files
+.env
+
 # ignore node/grunt dependency directories
 node_modules/
 

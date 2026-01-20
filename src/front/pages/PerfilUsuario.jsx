@@ -49,12 +49,11 @@ function PerfilUsuario() {
                 bio: profile.bio || "",
                 gender_id: profile.gender?.id?.toString() || "",
                 skills: mappedSkills,
-                image_filename: null, // file inputs cannot be prefilled for security
+                image_filename: null, 
             });
         }
     }, [profile]);
 
-    // Fetch all skills list on mount
     useEffect(() => {
         axios
             .get(`${backendUrl}/skill`)

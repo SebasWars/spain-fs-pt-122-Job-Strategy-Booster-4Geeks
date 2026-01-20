@@ -23,6 +23,30 @@ postulaciones_skill = Table(
     Column('skill_id', Integer, ForeignKey(
         'skill.id', ondelete="CASCADE"), primary_key=True),
     extend_existing=True
+<<<<<<< HEAD
+=======
+)
+
+# SocialMedia <-> SocialMediaStatus many-to-many association table (MISSING from your code, so adding)
+social_media_status_association = Table(
+    'social_media_status_association',
+    db.metadata,
+    Column('social_media_id', Integer, ForeignKey(
+        'social_media.id', ondelete='CASCADE'), primary_key=True),
+    Column('social_media_status_id', Integer, ForeignKey(
+        'social_media_status.id', ondelete='CASCADE'), primary_key=True),
+)
+
+# Postulaciones <-> SocialMedia many-to-many with extra status id stored in association table
+postulacion_social_media = Table(
+    'postulacion_social_media',
+    db.metadata,
+    Column('postulacion_id', ForeignKey(
+        'postulaciones.id', ondelete='CASCADE'), primary_key=True),
+    Column('social_media_id', ForeignKey('social_media.id'), primary_key=True),
+    Column('social_media_status_id', ForeignKey(
+        'social_media_status.id'), primary_key=True),
+>>>>>>> ccb351c (Chat Bot)
 )
 
 # SocialMedia <-> SocialMediaStatus many-to-many association table (MISSING from your code, so adding)
@@ -134,12 +158,21 @@ class SocialMedia(db.Model):
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     image_filename: Mapped[str] = mapped_column(String(255), nullable=True)
 
+<<<<<<< HEAD
     postulaciones: Mapped[list["Postulaciones"]] = relationship(
         "Postulaciones",
         secondary=postulacion_social_media,
         back_populates="social_medias",
     )
 
+=======
+    postulaciones = relationship(
+        "Postulaciones",
+        secondary=postulacion_social_media,
+        back_populates="social_medias",
+        viewonly=True,
+    )
+>>>>>>> ccb351c (Chat Bot)
     statuses: Mapped[list["SocialMediaStatus"]] = relationship(
         "SocialMediaStatus",
         secondary=social_media_status_association,
@@ -261,6 +294,7 @@ class Postulaciones(db.Model):
         secondary=postulaciones_skill,
         back_populates="postulaciones",
         cascade="all, delete"
+<<<<<<< HEAD
     )
 
     social_medias: Mapped[list["SocialMedia"]] = relationship(
@@ -275,18 +309,59 @@ class Postulaciones(db.Model):
         secondary=postulacion_social_media,
         back_populates="postulaciones",
         cascade="all, delete"
+=======
+    )
+    social_medias = relationship(
+        "SocialMedia",
+        secondary=postulacion_social_media,
+        back_populates="postulaciones",
+        viewonly=True  # Because the real link includes social_media_status_id, so insert manually
+    )
+
+    social_media_statuses = relationship(
+        "SocialMediaStatus",
+        secondary=postulacion_social_media,
+        back_populates="postulaciones",
+        viewonly=True
+>>>>>>> ccb351c (Chat Bot)
     )
 
     matched_percentage: Mapped[float] = mapped_column(Float, default=0.0)
 
     def serialize(self):
         social_media_with_statuses = []
+<<<<<<< HEAD
         for sm in self.social_medias:
             social_media_with_statuses.append({
                 "social_media": sm.name,
                 "statuses": [status.name for status in sm.statuses]
             })
 
+=======
+
+        for sm in self.social_medias:
+            status_rows = db.session.execute(
+                postulacion_social_media.select().with_only_columns(
+                    postulacion_social_media.c.social_media_status_id
+                ).where(
+                    (postulacion_social_media.c.postulacion_id == self.id) &
+                    (postulacion_social_media.c.social_media_id == sm.id)
+                )
+            ).fetchall()
+
+            print(
+                f"Social Media: {sm.name}, Status IDs: {[row[0] for row in status_rows]}")
+
+            status_ids = [row[0] for row in status_rows]
+            statuses = db.session.query(SocialMediaStatus).filter(
+                SocialMediaStatus.id.in_(status_ids)
+            ).all()
+
+            social_media_with_statuses.append({
+                "social_media": sm.name,
+                "statuses": [status.name for status in statuses]
+            })
+>>>>>>> ccb351c (Chat Bot)
         return {
             "id": self.id,
             "nombre_empresa": self.nombre_empresa,

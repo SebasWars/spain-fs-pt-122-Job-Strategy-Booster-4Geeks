@@ -1,6 +1,8 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
+from dotenv import load_dotenv
+from openai import OpenAI
 import os
 from flask_bcrypt import Bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
@@ -9,6 +11,7 @@ from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
+import traceback  # <-- Add this line!
 
 api = Blueprint('api', __name__)
 
@@ -18,7 +21,36 @@ CORS(api, origins=[
     "https://organic-pancake-977j4vrjprg9h4g5-3000.app.github.dev",
     "http://localhost:3000"
 ])
+load_dotenv()
 bcrypt = Bcrypt()  # just create the instance here
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(openai_api_key)
+
+
+@api.route('/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.json
+        if not data or 'message' not in data:
+            return jsonify({'response': 'No message provided'}), 400
+
+        user_message = data['message']
+
+        # Example:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        bot_reply = response.choices[0].message.content
+        return jsonify({"response": bot_reply})
+
+    except Exception as e:
+        traceback.print_exc()  # Print full error in console/log
+        return jsonify({"response": f"Error: {str(e)}"}), 500
 
 
 def save_uploaded_file(file, upload_folder=None):
@@ -660,6 +692,75 @@ def count_post():
     return jsonify({"count": count})
 
 
+<<<<<<< HEAD
+=======
+@api.route("/posts/entrevista", methods=["GET"])
+@jwt_required()
+def count_entrevista():
+    current_user = get_jwt_identity()
+    user = User.query.get(current_user)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    social_status = SocialMediaStatus.query.filter_by(
+        name="Entrevista").first()
+    if not social_status:
+        return jsonify({"error": "SocialMediaStatus 'Entrevista' not found"}), 404
+
+    count = Postulaciones.query.filter(
+        Postulaciones.user_id == user.id,
+        Postulaciones.social_media_statuses.any(
+            SocialMediaStatus.id == social_status.id)
+    ).count()
+
+    return jsonify({"entrevista": count})
+
+
+@api.route("/posts/ofertas", methods=["GET"])
+@jwt_required()
+def count_ofertas():
+    current_user = get_jwt_identity()
+    user = User.query.get(current_user)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    social_status = SocialMediaStatus.query.filter_by(
+        name="Ofertas").first()
+    if not social_status:
+        return jsonify({"error": "SocialMediaStatus 'Ofertas' not found"}), 404
+
+    count = Postulaciones.query.filter(
+        Postulaciones.user_id == user.id,
+        Postulaciones.social_media_statuses.any(
+            SocialMediaStatus.id == social_status.id)
+    ).count()
+
+    return jsonify({"ofertas": count})
+
+
+@api.route("/posts/descartado", methods=["GET"])
+@jwt_required()
+def count_descartado():
+    current_user = get_jwt_identity()
+    user = User.query.get(current_user)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    social_status = SocialMediaStatus.query.filter_by(
+        name="Descartado").first()
+    if not social_status:
+        return jsonify({"error": "SocialMediaStatus 'Descartado' not found"}), 404
+
+    count = Postulaciones.query.filter(
+        Postulaciones.user_id == user.id,
+        Postulaciones.social_media_statuses.any(
+            SocialMediaStatus.id == social_status.id)
+    ).count()
+
+    return jsonify({"descartado": count})
+
+
+>>>>>>> ccb351c (Chat Bot)
 @api.route("/posts", methods=["GET"])
 def postulaciones_get():
     postulaciones = Postulaciones.query.order_by(Postulaciones.id.asc()).all()
@@ -720,7 +821,11 @@ def postulaciones_post():
     social_media_status_entries = []
 
     for sm in social_media_list:
+<<<<<<< HEAD
         sm_platform = sm.get("platform")  # Expecting social_media.id (int)
+=======
+        sm_platform = sm.get("platform")  # expecting int social_media_id
+>>>>>>> ccb351c (Chat Bot)
         sm_status_ids = sm.get("status")
 
         if sm_platform is None:
@@ -774,7 +879,11 @@ def postulaciones_post():
     )
 
     db.session.add(new_postulacion)
+<<<<<<< HEAD
     db.session.flush()  # get new_postulacion.id
+=======
+    db.session.flush()  # flush to get new_postulacion.id for association table
+>>>>>>> ccb351c (Chat Bot)
 
     # Insert all social media + status entries (multiple allowed now)
     for social_media_id, social_media_status_id in social_media_status_entries:
