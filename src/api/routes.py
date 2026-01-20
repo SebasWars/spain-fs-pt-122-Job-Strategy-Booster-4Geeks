@@ -661,6 +661,29 @@ def postulaciones_post():
     positions = data.get("positions")
     job_description = data.get("job_description")
 
+    REQUIRED_FIELDS = [
+    "company_name",
+    "expireiance",
+    "city_id",
+    "salary",
+    "plataforma",
+    "url",
+    "category_id",
+    "work_type_id",
+    "employment_type_id",
+    "requirements",
+    "candidates_applied",
+    "positions",
+    "job_description",
+    ]
+
+    missing_field = [field for field in REQUIRED_FIELDS if field not in data or data[field] is None]
+
+    if missing_field:
+        return {
+            "error": "Missing required fields",
+            "fields": missing_field
+        }, 400
 
     if None in [city_id, category_id, work_type_id, employment_type_id]:
         return {"error": "Invalid or missing foreign key IDs"}, 400
@@ -673,38 +696,6 @@ def postulaciones_post():
         return {"error": "Work type not found"}, 404
     if not EmploymentType.query.get(employment_type_id):
         return {"error": "Employment type not found"}, 404
-
-    social_media_list = data.get("social_media", [])
-    social_media_status_entries = []
-
-    for sm in social_media_list:
-        sm_platform = sm.get("platform")
-        sm_status_ids = sm.get("status")
-
-        if sm_platform is None:
-            return {"error": "Missing social media platform id"}, 400
-
-        if not isinstance(sm_status_ids, list):
-            sm_status_ids = [sm_status_ids]
-
-        social_media = SocialMedia.query.get(sm_platform)
-        if not social_media:
-            return {"error": f"Social media platform with id {sm_platform} not found"}, 404
-
-        for status_id in sm_status_ids:
-            sm_status_id = safe_int(status_id)
-            if sm_status_id is None:
-                return {"error": "Invalid social media status id"}, 400
-
-            sm_status = SocialMediaStatus.query.get(sm_status_id)
-            if not sm_status:
-                return {"error": f"Social media status id {sm_status_id} not found"}, 404
-
-            social_media_status_entries.append((social_media.id, sm_status.id))
-
-    skills_ids = [safe_int(i) for i in data.get(
-        "skills", []) if safe_int(i) is not None]
-    skills_objects = Skill.query.filter(Skill.id.in_(skills_ids)).all()
 
     pending_status = Status.query.filter_by(name="pending").first()
     if not pending_status:
@@ -725,33 +716,8 @@ def postulaciones_post():
         candidates_applied=candidates_applied,
         job_description=job_description,
         positions=positions,
-        user_id=safe_int(current_user_id),
-        skills=skills_objects,
     )
 
     db.session.add(new_postulacion)
-    db.session.flush()
-    for social_media_id, social_media_status_id in social_media_status_entries:
-        stmt = postulacion_social_media.insert().values(
-            postulacion_id=new_postulacion.id,
-            social_media_id=social_media_id,
-            social_media_status_id=social_media_status_id,
-        )
-        db.session.execute(stmt)
-
-    user = User.query.get(new_postulacion.user_id)
-    profile = Profile.query.filter_by(
-        user_id=user.id).first() if user else None
-
-    post_skill_ids = {skill.id for skill in skills_objects}
-    profile_skill_ids = {
-        skill.id for skill in profile.skills} if profile else set()
-
-    matched_count = len(post_skill_ids & profile_skill_ids)
-    matched_percentage = (matched_count / len(post_skill_ids)
-                          * 100) if post_skill_ids else 0
-    new_postulacion.matched_percentage = round(matched_percentage, 2)
-
     db.session.commit()
-
     return jsonify(new_postulacion.serialize()), 201
