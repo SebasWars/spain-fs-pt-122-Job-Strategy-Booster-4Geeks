@@ -692,8 +692,6 @@ def count_post():
     return jsonify({"count": count})
 
 
-<<<<<<< HEAD
-=======
 @api.route("/posts/entrevista", methods=["GET"])
 @jwt_required()
 def count_entrevista():
@@ -760,7 +758,6 @@ def count_descartado():
     return jsonify({"descartado": count})
 
 
->>>>>>> ccb351c (Chat Bot)
 @api.route("/posts", methods=["GET"])
 def postulaciones_get():
     postulaciones = Postulaciones.query.order_by(Postulaciones.id.asc()).all()
@@ -821,11 +818,8 @@ def postulaciones_post():
     social_media_status_entries = []
 
     for sm in social_media_list:
-<<<<<<< HEAD
         sm_platform = sm.get("platform")  # Expecting social_media.id (int)
-=======
         sm_platform = sm.get("platform")  # expecting int social_media_id
->>>>>>> ccb351c (Chat Bot)
         sm_status_ids = sm.get("status")
 
         if sm_platform is None:
@@ -879,11 +873,8 @@ def postulaciones_post():
     )
 
     db.session.add(new_postulacion)
-<<<<<<< HEAD
     db.session.flush()  # get new_postulacion.id
-=======
     db.session.flush()  # flush to get new_postulacion.id for association table
->>>>>>> ccb351c (Chat Bot)
 
     # Insert all social media + status entries (multiple allowed now)
     for social_media_id, social_media_status_id in social_media_status_entries:
