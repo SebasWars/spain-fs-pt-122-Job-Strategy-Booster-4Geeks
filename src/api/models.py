@@ -6,7 +6,6 @@ from datetime import datetime
 db = SQLAlchemy()
 
 
-
 class User(db.Model):
     __tablename__ = "user"
 
@@ -17,11 +16,10 @@ class User(db.Model):
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
-    # Relaciones
-    profile: Mapped["Profile"] = relationship(
-        "Profile", back_populates="user", uselist=False
-    )
-    postulations: Mapped[list["Postulation"]] = relationship(
-        "Postulation", back_populates="user"
-    )
-
+    def serialize(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "is_active": self.is_active
+        }
