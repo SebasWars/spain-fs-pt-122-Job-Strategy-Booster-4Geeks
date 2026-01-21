@@ -3,11 +3,13 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 from flask_bcrypt import Bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User
+from api.models import db, User, Postulations
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.data_mock.mock_data import jobs
+from datetime import datetime
+
 api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
@@ -24,6 +26,9 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+
+""" ---------- REGISTER ENDPOINT ----------- """
 
 
 @api.route('/register', methods=["POST"])
@@ -61,6 +66,9 @@ def register():
     }), 201
 
 
+""" ------------ LOGIN ENDPOINT ----------- """
+
+
 @api.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -87,20 +95,23 @@ def user_detail():
 
 
 # -----------------------------Postulaciones-----------------------------#
-@api.route("/posts/my-post-count", methods=["GET"])
+""" @api.route("/posts/my-post-count", methods=["GET"])
 def count_post():
-    total_job=len(jobs)
-    return jsonify({"count":total_job})
+    total_job = len(jobs)
+    return jsonify({"count": total_job})
+
 
 @api.route("/posts/oferta", methods=["GET"])
 def count_oferta():
     total_job = len([j for j in jobs if j["proceso"] == "Ofertas"])
     return jsonify({"oferta": total_job})
 
+
 @api.route("/posts/descartado", methods=["GET"])
 def count_descartado():
     total_job = len([j for j in jobs if j["proceso"] == "Descartado"])
     return jsonify({"descartado": total_job})
+
 
 @api.route("/posts/entrevista", methods=["GET"])
 def count_entrevista():
@@ -112,20 +123,126 @@ def count_entrevista():
 def postulaciones_get():
     job = [j for j in jobs]
     return jsonify(job)
+
+
 @api.route("/postulacion/<int:id>", methods=['GET'])
 def postulaciones_get_id(id):
     job = next((j for j in jobs if j['id'] == id), None)
     if job is None:
         return jsonify({"error": "Job not found"}), 404
     return jsonify(job)
-    
+
+
 @api.route("/postulacion/filter", methods=['GET'])
 def postulaciones_ge_filtert():
     status_filter = request.args.get('status', None)
 
     if status_filter:
-        filtered_jobs = [job for job in jobs if job.get('status', '').lower() == status_filter.lower()]
+        filtered_jobs = [job for job in jobs if job.get(
+            'status', '').lower() == status_filter.lower()]
     else:
         filtered_jobs = jobs
 
     return jsonify(filtered_jobs), 200
+ """
+
+
+@api.route("/postulations", methods=["GET"])
+@jwt_required()
+def count_post():
+    current_user = get_jwt_identity()
+    user = User.query.get(current_user)
+    count = Postulations.query.filter_by(user_id=user.id).count()
+    return jsonify({"count": count})
+
+
+@api.route("/postulations", methods=["POST"])
+@jwt_required()
+def postulaciones_post():
+    data = request.get_json()
+
+    if not data:
+        return {"error": "Request body must be JSON"}, 400
+
+    current_user_id = get_jwt_identity()
+    postulation_state = data.get("postulation_state")
+    company_name = data.get("company_name")
+    role = data.get("role")
+    inscription_date = data.get('inscription_date')
+    city = data.get("city")
+    platform = data.get("platform")
+    postulation_url = data.get("url")
+    work_type = data.get("work_type")
+    requirements = data.get("requirements")
+
+    job_description = data.get("job_description")
+
+    REQUIRED_FIELDS = [
+        "postulation_state",
+        "company_name",
+        "role",
+        "experience",
+        "inscription_date",
+        "city",
+        "salary",
+        "platform",
+        "url",
+        "work_type",
+        "requirements",
+        "candidates_applied",
+        "available_positions",
+        "job_description",
+    ]
+
+    missing_field = [
+        field for field in REQUIRED_FIELDS if field not in data or data[field] is None]
+
+    if missing_field:
+        return {"error": "Missing required fields", "fields": missing_field}, 400
+
+    def safe_int(value, field_name, min_value=0):
+        try:
+            value = int(value)
+            if value < min_value:
+                raise ValueError
+            return value
+        except (ValueError, TypeError):
+            raise ValueError(f"{field_name} must be an integer")
+
+    try:
+        experience = safe_int(data["experience"], "experience", 0)
+        salary = safe_int(data.get("salary"), "salary", 0)
+        candidates_applied = safe_int(
+            data.get("candidates_applied"), "candidates_applied", 0)
+        available_positions = safe_int(
+            data.get("available_positions"), "available_positions", 1)
+    except ValueError as e:
+        return {"error": str(e)}, 400
+
+    try:
+        inscription_date = datetime.strptime(
+            inscription_date, "%d-%m-%Y").date()
+    except (ValueError, TypeError):
+        return {"error": "inscription_date must be in dd-mm-yyyy format"}, 400
+
+    new_postulacion = Postulations(
+        user_id=current_user_id,
+        postulation_state=postulation_state,
+        company_name=company_name,
+        role=role,
+        experience=experience,
+        inscription_date=inscription_date,
+        city=city,
+        salary=salary,
+        platform=platform,
+        postulation_url=postulation_url,
+        work_type=work_type,
+        requirements=requirements,
+        candidates_applied=candidates_applied,
+        available_positions=available_positions,
+        job_description=job_description
+    )
+
+    db.session.add(new_postulacion)
+    db.session.commit()
+    return jsonify(new_postulacion.serialize()), 201
