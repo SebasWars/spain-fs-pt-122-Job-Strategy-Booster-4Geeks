@@ -29,7 +29,8 @@ export const router = createBrowserRouter(
       <Route path="curriculum" element={<Curriculums />} />
       <Route path="interview" element={<Interview />} />
       <Route path="register" element={<Registration />} />
-      <Route path="jobId" element={<JobsDetail />} />
+        <Route path="/postulacion/:id" element={<JobsDetail />} />
+      <Route path="/formulario" element={<Formulario />} />
       <Route path="login" element={<LoginForm />} />
       <Route path="perfil" element={<PerfilUsuario />} />
       <Route path="formulario" element={<Formulario />} />

@@ -82,12 +82,7 @@ function Sidebar() {
                         to="/formulario"
                         onClick={() => handleNavigation("/formulario")}
                     />
-                    <NavBarButton
-                        icon={faClipboardList}
-                        label="PostulacionesDetail"
-                        to="/jobId"
-                        onClick={() => handleNavigation("/jobId")}
-                    />
+                   
                 </div>
             </div>
 

@@ -3,11 +3,11 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 from flask_bcrypt import Bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Postulation
+from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-
+from api.data_mock.mock_data import jobs
 api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
@@ -87,106 +87,45 @@ def user_detail():
 
 
 # -----------------------------Postulaciones-----------------------------#
-@api.route("/postulations", methods=["GET"])
-@jwt_required()
-def get_my_postulations():
-    current_user = get_jwt_identity()
+@api.route("/posts/my-post-count", methods=["GET"])
+def count_post():
+    total_job=len(jobs)
+    return jsonify({"count":total_job})
 
-    postulations = Postulation.query.filter_by(user_id=current_user).all()
+@api.route("/posts/oferta", methods=["GET"])
+def count_oferta():
+    total_job = len([j for j in jobs if j["proceso"] == "Ofertas"])
+    return jsonify({"oferta": total_job})
 
-    return jsonify([
-        postulation.serialize() for postulation in postulations
-    ]), 200
+@api.route("/posts/descartado", methods=["GET"])
+def count_descartado():
+    total_job = len([j for j in jobs if j["proceso"] == "Descartado"])
+    return jsonify({"descartado": total_job})
 
-
-@api.route("/postulations", methods=["POST"])
-@jwt_required()
-def postulaciones_post():
-    data = request.get_json()
-    current_user_id = get_jwt_identity()
-
-    def safe_int(val, default=None):
-        try:
-            return int(val)
-        except (ValueError, TypeError):
-            return default
-
-    postulation_state = data.get("postulation_state")
-    company_name = data.get("company_name")
-    role = data.get("role")
-    expireiance = data.get("expireiance")
-    inscription_date = data.get('inscription_date')
-    city = data.get("city")
-    salary = data.get("salary")
-    platform = data.get("platform")
-    postulation_url = data.get("url")
-    work_type = data.get("work_type")
-    requirements = data.get("requirements")
-    candidates_applied = data.get("candidates_applied")
-    available_positions = data.get("available_positions")
-    job_description = data.get("job_description")
-
-    REQUIRED_FIELDS = [
-        "postulation_state",
-        "company_name",
-        "role",
-        "expireiance",
-        "inscription_date",
-        "city",
-        "salary",
-        "platform",
-        "url",
-        "work_type",
-        "requirements",
-        "candidates_applied",
-        "available_positions",
-        "job_description",
-    ]
-
-    missing_field = [
-        field for field in REQUIRED_FIELDS if field not in data or data[field] is None]
-
-    if missing_field:
-        return {
-            "error": "Missing required fields",
-            "fields": missing_field
-        }, 400
-
-    new_postulacion = Postulation(
-        user_id=current_user_id,
-        postulation_state=postulation_state,
-        company_name=company_name,
-        role=role,
-        expireiance=expireiance,
-        inscription_date=inscription_date,
-        city=city,
-        salary=salary,
-        platform=platform,
-        postulation_url=postulation_url,
-        work_type=work_type,
-        requirements=requirements,
-        candidates_applied=candidates_applied,
-        available_positions=available_positions,
-        job_description=job_description,
-    )
-
-    db.session.add(new_postulacion)
-    db.session.commit()
-    return jsonify(new_postulacion.serialize()), 201
+@api.route("/posts/entrevista", methods=["GET"])
+def count_entrevista():
+    total_job = len([j for j in jobs if j["proceso"] == "En entrevista"])
+    return jsonify({"entrevista": total_job})
 
 
-@api.route('/post/<int:id>', methods=['DELETE'])
-@jwt_required()
-def remove_postulation(id):
-    current_user_id = get_jwt_identity()
+@api.route("/postulacion", methods=['GET'])
+def postulaciones_get():
+    job = [j for j in jobs]
+    return jsonify(job)
+@api.route("/postulacion/<int:id>", methods=['GET'])
+def postulaciones_get_id(id):
+    job = next((j for j in jobs if j['id'] == id), None)
+    if job is None:
+        return jsonify({"error": "Job not found"}), 404
+    return jsonify(job)
+    
+@api.route("/postulacion/filter", methods=['GET'])
+def postulaciones_ge_filtert():
+    status_filter = request.args.get('status', None)
 
-    if postulation.user_id != current_user_id:
-        return {"message": "Unauthorized"}, 403
+    if status_filter:
+        filtered_jobs = [job for job in jobs if job.get('status', '').lower() == status_filter.lower()]
+    else:
+        filtered_jobs = jobs
 
-    postulation = Postulation.query.filter_by(id=id).first()
-    if not postulation:
-        return {'message': 'There is no postulation to eliminate'}, 400
-
-    db.session.delete(postulation)
-    db.session.commit()
-    return jsonify({"message": "Postulation has been removed"})
+    return jsonify(filtered_jobs), 200

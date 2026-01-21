@@ -1,7 +1,23 @@
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 export default function JobsDetail() {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+    const {id}=useParams()
+    const [postulacion,setPostulacion]=useState(null)
+    useEffect(()=>{
+        axios.get(`${backendUrl}/postulacion/${id}`).then((res)=>setPostulacion(res.data)).catch((err)=>{console.error(err);
+        })
+
+
+    },[])
+    if (!postulacion) {
+  return <p className="text-center my-5">Loading job...</p>;
+}
     return (
+        
         <div
             className="d-flex flex-column  justify-between my-5 bg-white rounded shadow px-4 py-4"
             style={{ maxWidth: '90rem' }}
@@ -14,7 +30,7 @@ export default function JobsDetail() {
                         className="rounded-circle"
                         style={{ backgroundColor: '#DBEAFE', padding: '0.5rem', width: 56, height: 56 }}
                     />
-                    <h1 className="h4 mb-0 fw-semibold">ReactJS Developer</h1>
+                    <h1 className="h4 mb-0 fw-semibold">{postulacion.company}</h1>
                 </div>
                 <div className=" d-flex  gap-3 justify-content-center justify-content-md-start">
                     <button
@@ -53,7 +69,7 @@ export default function JobsDetail() {
                                 className="rounded-circle"
                                 style={{ backgroundColor: '#DBEAFE', padding: '0.5rem', width: 56, height: 56 }}
                             />
-                            <h2 className="h5 mb-0 fw-semibold">ReactJS Developer</h2>
+                            <h2 className="h5 mb-0 fw-semibold">{postulacion.title}</h2>
                         </div>
                         <div className="col-auto text-center">
                             <svg
@@ -68,7 +84,7 @@ export default function JobsDetail() {
                                 <circle
                                     stroke="#6b21a8"
                                     strokeWidth="3"
-                                    strokeDasharray="90, 100"
+strokeDasharray={`${postulacion.match_percentage}, 100`}
                                     strokeLinecap="round"
                                     fill="none"
                                     cx="18"
@@ -83,7 +99,7 @@ export default function JobsDetail() {
                                     textAnchor="middle"
                                     fontWeight="bold"
                                 >
-                                    90%
+                                    ${postulacion.match_percentage}%
                                 </text>
                             </svg>
                             <div className="small text-muted">Strong Match Candidates</div>
@@ -96,26 +112,26 @@ export default function JobsDetail() {
                                 icon: "fa-money-bill-wave",
                                 iconColor: "text-primary",
                                 title: "Salary",
-                                value: "$25K–30K annually",
+                                value: `${postulacion.salary}`,
                             },
                             {
                                 icon: "fa-users",
                                 iconColor: "text-success",
                                 title: "Candidates Applied",
-                                value: "15",
+                                value: `${postulacion.candidates_applied}`,
                             },
                             {
                                 icon: "fa-check-circle",
                                 iconColor: "text-purple",
                                 title: "Completed Interviews",
-                                value: "08",
+                                value:  `${postulacion.completed_interviews}`,
                                 iconStyle: { fontSize: "1.6rem", color: "#6b21a8" },
                             },
                             {
                                 icon: "fa-clipboard-list",
                                 iconColor: "text-warning",
                                 title: "Positions Open",
-                                value: "2 Positions Open, 3 Years",
+                                value: `${postulacion.total_positions} Positions,${postulacion.experience}`,
                             },
                         ].map(({ icon, iconColor, title, value, iconStyle }) => (
                             <div key={title} className="col">
@@ -137,30 +153,34 @@ export default function JobsDetail() {
                     <div>
                         <h3 className="h5 mb-3 fw-semibold">Job Description</h3>
                         <p className="mb-5 text-secondary" style={{ lineHeight: 1.6 }}>
-                            We are looking for a skilled ReactJS Developer to join our development team in Surat. The ideal candidate
-                            will have experience building scalable, high-performance web applications using ReactJS and will be
-                            responsible for developing and maintaining user-facing features.
+                           {postulacion.job_description}
                         </p>
 
                         <div className="row row-cols-1 row-cols-sm-2 g-5">
                             <div>
                                 <h4 className="fw-semibold mb-3">Responsibilities</h4>
-                                <ul className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
-                                    <li>• Build reusable React components and front-end libraries</li>
-                                    <li>• Optimize application performance for maximum speed and scalability</li>
-                                    <li>• Collaborate with backend developers and UI/UX designers</li>
-                                    <li>• Write clean, maintainable, and efficient code</li>
+                                {postulacion.responsibilities.map((res)=>(
+
+                                    
+                                <ul key={res.id} className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
+                                    <li>•{res}</li>
+                                    
                                 </ul>
+                                ))}
+
                             </div>
 
                             <div>
                                 <h4 className="fw-semibold mb-3">Requirements</h4>
-                                <ul className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
-                                    <li>• 3+ years of experience with ReactJS</li>
-                                    <li>• Strong proficiency in JavaScript, including ES6+ features</li>
-                                    <li>• Experience with RESTful APIs and modern front-end build pipelines</li>
-                                    <li>• Familiarity with Git and Agile development methodologies</li>
+
+                                {postulacion.requirements.map((res)=>(
+                                <ul key={res.div} className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
+                                    <li>• {res}</li>
+                                    
                                 </ul>
+
+                                ))}
+                                
                             </div>
                         </div>
                     </div>
