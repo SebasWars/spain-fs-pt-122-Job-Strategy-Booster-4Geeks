@@ -10,6 +10,7 @@ import {
     faGear,
     faCircleQuestion,
     faFileLines,
+    faInfoCircle
 } from "@fortawesome/free-solid-svg-icons";
 
 import { UserContext } from "../hooks/UserContextProvier.jsx";
@@ -89,6 +90,12 @@ function Sidebar() {
             <div className="general">
                 <h4>General</h4>
                 <div className="tools_buttons">
+                      <NavBarButton
+                        icon={faInfoCircle}
+                        label="About"
+                        to="/about"
+                        onClick={() => handleNavigation("/about")}
+                    />
                     <NavBarButton
                         icon={faGear}
                         label={"Ajustes"}

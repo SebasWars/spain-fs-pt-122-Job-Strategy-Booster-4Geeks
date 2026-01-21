@@ -9,13 +9,47 @@ from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.data_mock.mock_data import jobs
 api = Blueprint('api', __name__)
+from dotenv import load_dotenv
+import os
+import traceback 
+import openai
 
 # Allow CORS requests to this API
 CORS(api)
 
 bcrypt = Bcrypt()  # just create the instance here
 
+load_dotenv()  # This loads .env
+api_key = ("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")
+bcrypt = Bcrypt()  # just create the instance here
 
+
+openai.api_key = api_key
+
+
+@api.route('/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.json
+        if not data or 'message' not in data:
+            return jsonify({'response': 'No message provided'}), 400
+
+        user_message = data['message']
+
+        # Example:
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        bot_reply = response.choices[0].message.content
+        return jsonify({"response": bot_reply})
+
+    except Exception as e:
+        traceback.print_exc()  # Print full error in console/log
+        return jsonify({"response": f"Error: {str(e)}"}), 500
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
 
