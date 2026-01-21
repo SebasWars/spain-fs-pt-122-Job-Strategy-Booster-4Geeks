@@ -3,7 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 from flask_bcrypt import Bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Postulations
+from api.models import db, User, Postulation
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -92,11 +92,12 @@ def user_detail():
 def get_my_postulations():
     current_user = get_jwt_identity()
 
-    postulations = Postulations.query.filter_by(user_id=current_user).all()
+    postulations = Postulation.query.filter_by(user_id=current_user).all()
 
     return jsonify([
         postulation.serialize() for postulation in postulations
     ]), 200
+
 
 @api.route("/postulations", methods=["POST"])
 @jwt_required()
@@ -126,23 +127,24 @@ def postulaciones_post():
     job_description = data.get("job_description")
 
     REQUIRED_FIELDS = [
-    "postulation_state",
-    "company_name",
-    "role",
-    "expireiance",
-    "inscription_date",
-    "city",
-    "salary",
-    "platform",
-    "url",
-    "work_type",
-    "requirements",
-    "candidates_applied",
-    "available_positions",
-    "job_description",
+        "postulation_state",
+        "company_name",
+        "role",
+        "expireiance",
+        "inscription_date",
+        "city",
+        "salary",
+        "platform",
+        "url",
+        "work_type",
+        "requirements",
+        "candidates_applied",
+        "available_positions",
+        "job_description",
     ]
 
-    missing_field = [field for field in REQUIRED_FIELDS if field not in data or data[field] is None]
+    missing_field = [
+        field for field in REQUIRED_FIELDS if field not in data or data[field] is None]
 
     if missing_field:
         return {
@@ -150,22 +152,21 @@ def postulaciones_post():
             "fields": missing_field
         }, 400
 
-
-    new_postulacion = Postulations(
+    new_postulacion = Postulation(
         user_id=current_user_id,
-        postulation_state= postulation_state,
+        postulation_state=postulation_state,
         company_name=company_name,
         role=role,
         expireiance=expireiance,
-        inscription_date= inscription_date,
+        inscription_date=inscription_date,
         city=city,
         salary=salary,
-        platform = platform,
-        postulation_url = postulation_url,
-        work_type= work_type,
+        platform=platform,
+        postulation_url=postulation_url,
+        work_type=work_type,
         requirements=requirements,
         candidates_applied=candidates_applied,
-        available_positions = available_positions,
+        available_positions=available_positions,
         job_description=job_description,
     )
 
@@ -182,10 +183,10 @@ def remove_postulation(id):
     if postulation.user_id != current_user_id:
         return {"message": "Unauthorized"}, 403
 
-    postulation = Postulations.query.filter_by(id=id).first()
+    postulation = Postulation.query.filter_by(id=id).first()
     if not postulation:
         return {'message': 'There is no postulation to eliminate'}, 400
-    
+
     db.session.delete(postulation)
     db.session.commit()
     return jsonify({"message": "Postulation has been removed"})
