@@ -2,6 +2,8 @@ import { useState } from "react";
 import "../styles/Formulario.css";
 import { FiSave, FiX, FiLogOut } from "react-icons/fi";
 
+import { createNewPostulation } from '../Fetch/postulationFecth'
+
 
 export default function Formulario() {
     const [formData, setFormData] = useState({
@@ -132,7 +134,7 @@ export default function Formulario() {
                                 <input
                                     type="number"
                                     name="experience"
-                                    value={formData.expireiance}
+                                    value={formData.experience}
                                     onChange={handleChange}
                                 />
                             </div>
