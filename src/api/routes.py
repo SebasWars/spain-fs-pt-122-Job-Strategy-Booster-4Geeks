@@ -21,7 +21,7 @@ CORS(api)
 bcrypt = Bcrypt()  # just create the instance here
 
 load_dotenv()  # This loads .env
-api_key = ("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")
+api_key = ("")
 bcrypt = Bcrypt()  # just create the instance here
 
 
