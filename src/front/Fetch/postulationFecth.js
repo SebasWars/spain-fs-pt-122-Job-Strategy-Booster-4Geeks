@@ -1,5 +1,6 @@
+const backEndUrl = import.meta.env.VITE_BACKEND_URL;
 export async function createNewPostulation(formData, token) {
-  const response = await fetch("http://127.0.0.1:5000/api/postulation", {
+  const response = await fetch(`${backEndUrl}/postulation`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
