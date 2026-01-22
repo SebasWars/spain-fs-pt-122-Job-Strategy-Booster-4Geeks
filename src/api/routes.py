@@ -3,7 +3,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 """
 from flask_bcrypt import Bcrypt
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User
+from api.models import db, User,Postulaciones
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import os
 import traceback 
 import openai
+import requests  # This is the external requests library
 
 # Allow CORS requests to this API
 CORS(api)
@@ -25,7 +26,36 @@ bcrypt = Bcrypt()  # just create the instance here
 
 
 openai.api_key = api_key
+GOOGLE_API_KEY = ""
 
+@api.route('/translate', methods=['POST'])
+def translate():
+    data = request.json
+    texts = data.get("texts")
+    target = data.get("target")
+
+    if not texts or not target:
+        return jsonify({"error": "Missing 'texts' or 'target' in request body"}), 400
+
+    url = f"https://translation.googleapis.com/language/translate/v2?key={GOOGLE_API_KEY}"
+
+    body = {
+        "q": texts,
+        "target": target,
+    }
+
+    try:
+        # Use data= for form-urlencoded
+        response = requests.post(url, data=body)
+        response.raise_for_status()
+
+        translations = response.json().get("data", {}).get("translations", [])
+        translated_texts = [t["translatedText"] for t in translations]
+        return jsonify(translated_texts)
+    except requests.exceptions.HTTPError as err:
+        print(f"Error in /api/translate: {err}")
+
+        return jsonify({"error": str(err), "details": response.text}), 500
 
 @api.route('/chat', methods=['POST'])
 def chat():
@@ -105,7 +135,7 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({"message": "Invalid credentials"}), 401
 
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
 
     return jsonify({
         "access_token": access_token,
@@ -163,3 +193,53 @@ def postulaciones_ge_filtert():
         filtered_jobs = jobs
 
     return jsonify(filtered_jobs), 200
+
+
+@api.route("/postulaciones", methods=["GET"])
+def post_get():
+    post_list =[post.serializer() for post in Postulaciones.query.order_by(Postulaciones.id.asc()).all()]
+    return jsonify(post_list)
+@api.route("/postulaciones", methods=["POST"])
+@jwt_required()
+def post_post():
+    data = request.get_json()
+    if not data:
+        return jsonify({"msg": "Invalid JSON body"}), 400
+
+    current_user = get_jwt_identity()
+    name_company = data.get("name_company")
+
+    reqerments = data.get("reqerments")
+    if not isinstance(reqerments, list):
+        return jsonify({"msg": "reqerments must be a list"}), 400
+
+    def check_int(value):
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return None
+
+    salary = check_int(data.get("salary"))
+    if salary is None:
+        return jsonify({"msg": "salary must be a number"}), 400
+    if len(str(salary)) > 9:
+        return jsonify({"msg": "salary must have at most 9 digits"}), 400
+
+    candidatos = check_int(data.get("candidatos"))
+    if candidatos is None:
+        return jsonify({"msg": "candidatos must be a number"}), 400
+    if len(str(candidatos)) > 9:
+        return jsonify({"msg": "candidatos must have at most 9 digits"}), 400
+
+    new_postulacion = Postulaciones(
+        name_company=name_company,
+        salary=salary,
+        candidatos=candidatos,
+        user_id=current_user,
+        reqerments=reqerments,
+    )
+
+    db.session.add(new_postulacion)
+    db.session.commit()
+
+    return jsonify(new_postulacion.serializer()), 201

@@ -1,28 +1,29 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-
+import "../styles/JobDetail.css"
 export default function JobsDetail() {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-    const {id}=useParams()
-    const [postulacion,setPostulacion]=useState(null)
-    useEffect(()=>{
-        axios.get(`${backendUrl}/postulacion/${id}`).then((res)=>setPostulacion(res.data)).catch((err)=>{console.error(err);
+    const { id } = useParams()
+    const [postulacion, setPostulacion] = useState(null)
+    useEffect(() => {
+        axios.get(`${backendUrl}/postulacion/${id}`).then((res) => setPostulacion(res.data)).catch((err) => {
+            console.error(err);
         })
 
 
-    },[])
+    }, [])
     if (!postulacion) {
-  return <p className="text-center my-5">Loading job...</p>;
-}
+        return <p className="text-center my-5">Loading job...</p>;
+    }
     return (
-        
+
         <div
-            className="d-flex flex-column  justify-between my-5 bg-white rounded shadow px-4 py-4"
-            style={{ maxWidth: '90rem' }}
+            className="my-container d-flex flex-column  justify-between my-5 bg-white rounded shadow px-4 py-4"
+            style={{ maxWidth: '90rem', background: "#fff" }}
         >
-            <div className="d-flex align-items-center justify-content-between  p-3 mb-5">
+            <div className="second-container d-flex align-items-center justify-content-between  p-3 mb-5">
                 <div className="col-auto d-flex align-items-center gap-3 mb-3 mb-md-0">
                     <img
                         src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/1200px-React-icon.svg.png"
@@ -84,7 +85,7 @@ export default function JobsDetail() {
                                 <circle
                                     stroke="#6b21a8"
                                     strokeWidth="3"
-strokeDasharray={`${postulacion.match_percentage}, 100`}
+                                    strokeDasharray={`${postulacion.match_percentage}, 100`}
                                     strokeLinecap="round"
                                     fill="none"
                                     cx="18"
@@ -124,7 +125,7 @@ strokeDasharray={`${postulacion.match_percentage}, 100`}
                                 icon: "fa-check-circle",
                                 iconColor: "text-purple",
                                 title: "Completed Interviews",
-                                value:  `${postulacion.completed_interviews}`,
+                                value: `${postulacion.completed_interviews}`,
                                 iconStyle: { fontSize: "1.6rem", color: "#6b21a8" },
                             },
                             {
@@ -153,19 +154,19 @@ strokeDasharray={`${postulacion.match_percentage}, 100`}
                     <div>
                         <h3 className="h5 mb-3 fw-semibold">Job Description</h3>
                         <p className="mb-5 text-secondary" style={{ lineHeight: 1.6 }}>
-                           {postulacion.job_description}
+                            {postulacion.job_description}
                         </p>
 
                         <div className="row row-cols-1 row-cols-sm-2 g-5">
                             <div>
                                 <h4 className="fw-semibold mb-3">Responsibilities</h4>
-                                {postulacion.responsibilities.map((res)=>(
+                                {postulacion.responsibilities.map((res) => (
 
-                                    
-                                <ul key={res.id} className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
-                                    <li>•{res}</li>
-                                    
-                                </ul>
+
+                                    <ul key={res.id} className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
+                                        <li>•{res}</li>
+
+                                    </ul>
                                 ))}
 
                             </div>
@@ -173,14 +174,14 @@ strokeDasharray={`${postulacion.match_percentage}, 100`}
                             <div>
                                 <h4 className="fw-semibold mb-3">Requirements</h4>
 
-                                {postulacion.requirements.map((res)=>(
-                                <ul key={res.div} className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
-                                    <li>• {res}</li>
-                                    
-                                </ul>
+                                {postulacion.requirements.map((res) => (
+                                    <ul key={res.div} className="list-unstyled text-secondary fs-6" style={{ lineHeight: 1.6 }}>
+                                        <li>• {res}</li>
+
+                                    </ul>
 
                                 ))}
-                                
+
                             </div>
                         </div>
                     </div>

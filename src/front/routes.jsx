@@ -36,10 +36,6 @@ export const router = createBrowserRouter(
       <Route path="formulario" element={<Formulario />} />
       <Route path="about" element={<AboutUs />} />
       <Route path="timeline" element={<ListadoAplicaciones />} />
-
-
-
-
     </Route>
 
   )

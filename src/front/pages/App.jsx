@@ -7,11 +7,36 @@ import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { UserContext } from "../hooks/UserContextProvier.jsx";
 import Registration from './RegisterPage.jsx';
 import LoadingScreen from "../components/LoadingScreen";
+import { translatePage as translatePageFunc } from "../hooks/usePageTranslate.js";
 
 export default function App() {
     const { token, user, theme, toggleTheme } = useContext(UserContext);
-
     const [loading, setLoading] = useState(true);
+    const [language, setLanguage] = useState("en");
+
+    useEffect(() => {
+        window.googleTranslateElementInit = () => {
+            new window.google.translate.TranslateElement(
+                {
+                    pageLanguage: "en",
+                    includedLanguages: "bg,es,de",
+                    layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+                },
+                "google_translate_element"
+            );
+        };
+
+        const script = document.createElement("script");
+        script.src =
+            "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+        script.async = true;
+        document.body.appendChild(script);
+
+        return () => {
+            document.body.removeChild(script);
+            delete window.googleTranslateElementInit;
+        };
+    }, []);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -20,6 +45,12 @@ export default function App() {
 
         return () => clearTimeout(timer);
     }, []);
+
+    // Wrapper to update local state and call imported translatePage
+    const handleLanguageChange = (lang) => {
+        setLanguage(lang);
+        translatePageFunc(lang);
+    };
 
     if (!token) {
         return <Registration />;
@@ -30,7 +61,7 @@ export default function App() {
     }
 
     return (
-        <div className="main_container">
+        <div className="main_container" id="google_translate_element">
             <div className="display_component">
                 <Sidebar />
                 <div className="main_content">
@@ -40,7 +71,20 @@ export default function App() {
                             <button className='btn btn-secondary' onClick={toggleTheme}>
                                 {theme === "dark" ? "Modo claro" : "Modo oscuro"}
                             </button>
-                            <div className="user_personal_information">
+
+                            {/* Language dropdown */}
+                            <select
+                                value={language}
+                                onChange={(e) => handleLanguageChange(e.target.value)}
+                                style={{ marginLeft: "10px", padding: "5px" }}
+                            >
+                                <option value="en">EN</option>
+                                <option value="es">ES</option>
+                                <option value="bg">BG</option>
+                                <option value="de">DE</option>
+                            </select>
+
+                            <div className="user_personal_information" style={{ marginLeft: "10px" }}>
                                 <h3>Hello, {user.username}</h3>
                                 <p>{user.email}</p>
                             </div>

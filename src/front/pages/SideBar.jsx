@@ -18,6 +18,8 @@ import { useNavigate } from "react-router-dom";
 import LoadingScreen from "../components/LoadingScreen";
 
 function Sidebar() {
+
+
     const [loading, setLoading] = useState(false);
     const { logOut } = useContext(UserContext);
     const navigate = useNavigate();
@@ -59,6 +61,9 @@ function Sidebar() {
                         to="/"
                         onClick={() => handleNavigation("/")}
                     />
+
+
+
                     <NavBarButton
                         icon={faClipboardList}
                         label="Postulaciones"
@@ -83,14 +88,14 @@ function Sidebar() {
                         to="/formulario"
                         onClick={() => handleNavigation("/formulario")}
                     />
-                   
+
                 </div>
             </div>
 
             <div className="general">
                 <h4>General</h4>
                 <div className="tools_buttons">
-                      <NavBarButton
+                    <NavBarButton
                         icon={faInfoCircle}
                         label="About"
                         to="/about"
