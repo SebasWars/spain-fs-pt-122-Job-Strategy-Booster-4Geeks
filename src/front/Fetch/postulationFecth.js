@@ -1,8 +1,6 @@
-const backEndUrl = import.meta.env.VITE_BACKEND_URL;
-
 export async function createNewPostulation(formData, token) {
   const response = await fetch(
-    "https://orange-train-g45vq67vgj6w29g5v-3001.app.github.dev/postulations",
+    "https://orange-train-g45vq67vgj6w29g5v-3001.app.github.dev/api/postulations",
     {
       method: "POST",
       headers: {
