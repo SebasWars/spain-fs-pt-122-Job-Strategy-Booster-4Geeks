@@ -9,7 +9,7 @@ import Registration from './RegisterPage.jsx';
 import LoadingScreen from "../components/LoadingScreen";
 
 export default function App() {
-    const { token, user, theme, toggleTheme } = useContext(UserContext);
+    const { token, theme, toggleTheme } = useContext(UserContext);
 
     const [loading, setLoading] = useState(true);
 
@@ -21,13 +21,7 @@ export default function App() {
         return () => clearTimeout(timer);
     }, []);
 
-    if (!token) {
-        return <Registration />;
-    }
 
-    if (loading) {
-        return <LoadingScreen />;
-    }
 
     return (
         <div className="main_container">
@@ -41,8 +35,8 @@ export default function App() {
                                 {theme === "dark" ? "Modo claro" : "Modo oscuro"}
                             </button>
                             <div className="user_personal_information">
-                                <h3>Hello, {user.username}</h3>
-                                <p>{user.email}</p>
+                                <h3>Hello, </h3>
+                                <p></p>
                             </div>
                             <Link to="/perfil">
                                 <div className="user_picture"></div>
