@@ -449,28 +449,28 @@ def save_cv():
 
     print("DATA RECIBIDA:", data)
 
-    if not data:
-        return jsonify({'success': False, 'message': 'No se enviaron datos'}), 400
+    # if not data:
+    #     return jsonify({'success': False, 'message': 'No se enviaron datos'}), 400
 
-    try:
-        cv = CV.query.filter_by(user_id=current_user_id).first()
-        if cv:
-            cv.datos = json.dumps(data, ensure_ascii=False)
-            cv.fecha_modificacion = datetime.utcnow()
-        else:
-            cv = CV(
-                user_id=current_user_id,
-                datos=json.dumps(data, ensure_ascii=False),
-                fecha_modificacion=datetime.utcnow()
-            )
-            db.session.add(cv)
+    # try:
+    #     cv = CV.query.filter_by(user_id=current_user_id).first()
+    #     if cv:
+    #         cv.datos = json.dumps(data, ensure_ascii=False)
+    #         cv.fecha_modificacion = datetime.utcnow()
+    #     else:
+    #         cv = CV(
+    #             user_id=current_user_id,
+    #             datos=json.dumps(data, ensure_ascii=False),
+    #             fecha_modificacion=datetime.utcnow()
+    #         )
+    #         db.session.add(cv)
 
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'CV guardado correctamente'}), 200
+    #     db.session.commit()
+    return jsonify({'success': True, 'message': 'CV guardado correctamente'}), 200
 
-    except Exception as e:
-        print("ERROR AL GUARDAR CV:", e)
-        return jsonify({'success': False, 'message': str(e)}), 422
+    # except Exception as e:
+    #     print("ERROR AL GUARDAR CV:", e)
+    #     return jsonify({'success': False, 'message': str(e)}), 422
 
 
 @api.route("/cv", methods=["DELETE"])
