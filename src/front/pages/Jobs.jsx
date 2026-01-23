@@ -5,6 +5,7 @@ import JobCard2 from '../components/JobCard2';
 import MenuButttons from '../components/MenuButtons';
 import '../styles/JobCard2.css';
 import { useGetAuthorizationHeader } from '../hooks/useGetAuthorizationHeader';
+import { Link } from 'react-router-dom';
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -47,8 +48,12 @@ export default function Jobs() {
   return (
     <div className="app-container">
       <div className="filters">
-        <MenuButttons options={options} onFilterChange={handleFilterChange} selected={selectedFilter} />
-        <button className='advance_filter'>Filtros Avanzados</button>
+        <div className="filter">
+          <MenuButttons options={options} onFilterChange={handleFilterChange} selected={selectedFilter} />
+          <button className='advance_filter'>Filtros Avanzados</button>
+        </div>
+
+        <Link to='/formulario'><button className="add_new_postulation" onClick={() => { console.log(postulaciones) }}>Add</button></Link>
       </div>
       <div className="cards-grid">
         {postulaciones.length > 0 ? (

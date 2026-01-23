@@ -4,6 +4,7 @@ import { FiSave, FiX, FiLogOut } from "react-icons/fi";
 
 import { createNewPostulation } from '../Fetch/postulationFecth'
 import { useGetAuthorizationHeader } from "../hooks/useGetAuthorizationHeader";
+import { Link } from "react-router-dom";
 
 
 export default function Formulario() {
@@ -102,11 +103,12 @@ export default function Formulario() {
                                     onChange={handleChange}
                                 >
                                     <option value="">Seleccionar</option>
-                                    <option>Pendiente</option>
-                                    <option>En proceso</option>
-                                    <option>Entrevista</option>
-                                    <option>Rechazada</option>
-                                    <option>Aceptada</option>
+                                    <option>abierta</option>
+                                    <option>en proceso</option>
+                                    <option>entrevista</option>
+                                    <option>oferta</option>
+                                    <option>descartado</option>
+                                    <option>aceptada</option>
                                 </select>
                             </div>
 
@@ -268,9 +270,11 @@ export default function Formulario() {
                             <button type="submit" className="icon-button">
                                 <FiSave />
                             </button>
-                            <button type="button" className="icon-button secondary">
-                                <FiX />
-                            </button>
+                            <Link to='/Jobs'>
+                                <button type="button" className="icon-button secondary">
+                                    <FiX />
+                                </button>
+                            </Link>
                         </div>
 
                     </div>

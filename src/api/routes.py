@@ -157,6 +157,22 @@ def count_post():
     return jsonify({"postulations": postulations_data}), 200
 
 
+@api.route('/postulations/<int:id>', methods=['GET'])
+@jwt_required()
+def get_postulation(id):
+    current_user_id = get_jwt_identity()
+
+    postulation = Postulations.query.filter_by(
+        id=id,
+        user_id=current_user_id
+    ).first()
+
+    if not postulation:
+        return jsonify({"error": "Postulation not found"}), 404
+
+    return jsonify(postulation.serialize()), 200
+
+
 @api.route("/postulations", methods=["POST"])
 @jwt_required()
 def postulaciones_post():
@@ -246,6 +262,6 @@ def delete_postulation(id):
     if not postulation:
         return jsonify({'message': 'There is not postulation to delete'}), 400
 
-    db.session.remove(postulation)
+    db.session.delete(postulation)
     db.session.commit()
     return jsonify({"message": "Postulation has been removed"})
