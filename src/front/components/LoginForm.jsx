@@ -32,7 +32,7 @@ function LoginForm({ changeForm }) {
         const delay = new Promise((resolve) => setTimeout(resolve, 3000));
 
         try {
-            const res = await axios.post(`${backendUrl}/login`, {
+            const res = await axios.post(`${backendUrl}/api/login`, {
                 username: form.username,
                 password: form.password,
             });

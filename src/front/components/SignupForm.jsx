@@ -44,7 +44,7 @@ function SignupForm({ changeForm }) {
         }
 
         try {
-            const response = await axios.post(`${backendUrl}/register`, {
+            const response = await axios.post(`${backendUrl}/api/register`, {
                 username: form.username,
                 email: form.email,
                 password: form.password,
