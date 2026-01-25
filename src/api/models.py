@@ -45,13 +45,11 @@ class Postulations(db.Model):
     platform: Mapped[str] = mapped_column(String(100), nullable=False)
     postulation_url: Mapped[str] = mapped_column(String(2000), nullable=False)
     work_type: Mapped[str] = mapped_column(String(50), nullable=False)
-
     requirements: Mapped[List[str]] = mapped_column(JSON, nullable=False)    
-    
     candidates_applied: Mapped[int] = mapped_column(Integer, nullable=False)
     available_positions: Mapped[int] = mapped_column(Integer, nullable=False)
     job_description: Mapped[str] = mapped_column(String(500), nullable=False)
-
+    stages: Mapped[List[str]] = mapped_column
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     user: Mapped["User"] = relationship("User", back_populates="postulations")
 

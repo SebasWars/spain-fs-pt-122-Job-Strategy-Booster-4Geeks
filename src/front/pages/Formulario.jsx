@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 export default function Formulario() {
     const authorizationHeader = useGetAuthorizationHeader();
     const [formData, setFormData] = useState({
-        postulation_state: "",
+        postulation_state: "open",
         company_name: "",
         role: "",
         experience: "",
@@ -95,22 +95,6 @@ export default function Formulario() {
 
                         {/* Row 1 */}
                         <div className="form-row">
-                            <div className="form-group">
-                                <label>Estado</label>
-                                <select
-                                    name="postulation_state"
-                                    value={formData.postulation_state}
-                                    onChange={handleChange}
-                                >
-                                    <option value="">Seleccionar</option>
-                                    <option>abierta</option>
-                                    <option>en proceso</option>
-                                    <option>entrevista</option>
-                                    <option>oferta</option>
-                                    <option>descartado</option>
-                                    <option>aceptada</option>
-                                </select>
-                            </div>
 
                             <div className="form-group">
                                 <label>Empresa</label>
