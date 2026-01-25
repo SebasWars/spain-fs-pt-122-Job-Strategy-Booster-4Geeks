@@ -178,21 +178,101 @@ const CVAdministrator = () => {
         const doc = printWindow.document;
 
         doc.write("<html><head><title>CV - " + formData.nombre + "</title>");
-        doc.write("<style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.6;max-width:800px;margin:0 auto} h1{color:#2563eb;margin-bottom:5px} h2{color:#1e40af;margin-top:25px;margin-bottom:10px;border-bottom:2px solid #2563eb;padding-bottom:5px} h3{color:#334155;margin-top:15px;margin-bottom:5px} p{margin:5px 0;color:#475569} .contact{color:#64748b;font-size:14px} .section{margin-bottom:20px} .item{margin-bottom:15px;padding-left:10px;border-left:3px solid #60a5fa} .skills{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px} .skill{background:#dbeafe;color:#1e40af;padding:5px 12px;border-radius:4px;font-size:14px}</style>");
+
+        doc.write(`
+      <style>
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #e0f2fe;
+          padding: 40px;
+          line-height: 1.6;
+          max-width: 800px;
+          margin: 0 auto;
+          color: #1e293b;
+        }
+        h1 {
+          font-size: 2rem;
+          color: #2563eb;
+          margin-bottom: 5px;
+        }
+        h2 {
+          font-size: 1.25rem;
+          color: #1e40af;
+          margin-top: 30px;
+          margin-bottom: 10px;
+          border-bottom: 2px solid #2563eb;
+          padding-bottom: 5px;
+        }
+        h3 {
+          font-size: 1rem;
+          color: #334155;
+          margin-bottom: 5px;
+        }
+        p {
+          margin: 5px 0;
+          font-size: 0.95rem;
+        }
+        .contact {
+          font-size: 0.9rem;
+          color: #475569;
+          margin-bottom: 20px;
+        }
+        .section {
+          margin-bottom: 25px;
+        }
+        .item {
+          background: #ffffff;
+          border: 1px solid #dbeafe;
+          padding: 15px;
+          border-radius: 8px;
+          margin-bottom: 15px;
+          box-shadow: 0 2px 6px rgba(0, 40, 80, 0.05);
+        }
+        .skills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 10px;
+        }
+        .skill {
+          background: #dbeafe;
+          color: #1e40af;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          border: 1px solid #93c5fd;
+        }
+        img.profile {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 3px solid #2563eb;
+          margin-bottom: 20px;
+        }
+      </style>
+    `);
+
         doc.write("</head><body>");
 
         if (formData.foto) {
-            doc.write(`<img src="${formData.foto}" style="width:120px;height:120px;border-radius:50%;margin-bottom:20px;object-fit:cover;border:3px solid #2563eb" />`);
+            doc.write(`<img class="profile" src="${formData.foto}" />`);
         }
 
         doc.write(`<h1>${formData.nombre}</h1>`);
-        doc.write(`<p class="contact">${formData.email} | ${formData.telefono}${formData.ubicacion ? ' | ' + formData.ubicacion : ''}</p>`);
+
+        doc.write(`
+      <p class="contact">
+        📍 ${formData.ubicacion || "Ubicación no especificada"}<br>
+        📞 ${formData.telefono}<br>
+        ✉️ ${formData.email}
+      </p>
+    `);
 
         if (formData.linkedin || formData.github) {
             doc.write('<p class="contact">');
-            if (formData.linkedin) doc.write(`LinkedIn: ${formData.linkedin}`);
-            if (formData.linkedin && formData.github) doc.write(' | ');
-            if (formData.github) doc.write(`GitHub: ${formData.github}`);
+            if (formData.linkedin) doc.write(`🔗 LinkedIn: ${formData.linkedin}<br>`);
+            if (formData.github) doc.write(`🐙 GitHub: ${formData.github}`);
             doc.write('</p>');
         }
 
@@ -203,37 +283,48 @@ const CVAdministrator = () => {
         if (formData.experiencia.length > 0) {
             doc.write("<h2>Experiencia Laboral</h2><div class='section'>");
             formData.experiencia.forEach((e) => {
-                doc.write(`<div class='item'><h3>${e.puesto}</h3><p><strong>${e.empresa}</strong> • ${e.periodo}</p>`);
-                if (e.descripcion) doc.write(`<p>${e.descripcion}</p>`);
-                doc.write('</div>');
+                doc.write(`
+              <div class='item'>
+                <h3>${e.puesto}</h3>
+                <p><strong>${e.empresa}</strong> • ${e.periodo}</p>
+                ${e.descripcion ? `<p>${e.descripcion}</p>` : ""}
+              </div>
+            `);
             });
-            doc.write('</div>');
+            doc.write("</div>");
         }
 
         if (formData.educacion.length > 0) {
             doc.write("<h2>Educación</h2><div class='section'>");
             formData.educacion.forEach((e) => {
-                doc.write(`<div class='item'><h3>${e.titulo}</h3><p><strong>${e.institucion}</strong> • ${e.periodo}</p></div>`);
+                doc.write(`
+              <div class='item'>
+                <h3>${e.titulo}</h3>
+                <p><strong>${e.institucion}</strong> • ${e.periodo}</p>
+              </div>
+            `);
             });
-            doc.write('</div>');
+            doc.write("</div>");
         }
 
         if (formData.habilidades.length > 0) {
             doc.write("<h2>Habilidades Técnicas</h2><div class='skills'>");
             formData.habilidades.forEach(h => doc.write(`<span class='skill'>${h}</span>`));
-            doc.write('</div>');
+            doc.write("</div>");
         }
 
         if (formData.idiomas.length > 0) {
             doc.write("<h2>Idiomas</h2><div class='skills'>");
             formData.idiomas.forEach(l => doc.write(`<span class='skill'>${l}</span>`));
-            doc.write('</div>');
+            doc.write("</div>");
         }
 
         doc.write("</body></html>");
         doc.close();
+
         setTimeout(() => printWindow.print(), 250);
     };
+
 
     const importCV = (e) => {
         const file = e.target.files[0];
@@ -358,7 +449,7 @@ const CVAdministrator = () => {
                                 <FileText size={64} />
                             </div>
                             <h2>No tienes un CV registrado</h2>
-                            <p>Crea tu currículum vitae o importa uno existente</p>
+                            <p>Crea tu currículum vitae</p>
 
                             <div className="cv-empty-actions">
                                 <button className="btn btn-primary" onClick={() => setIsEditing(true)}>
@@ -908,12 +999,12 @@ const CVAdministrator = () => {
                             </div>
 
                             <div className="cv-editor-footer">
-                                <button className="btn btn-outline" type="button" onClick={() => setIsEditing(false)}>
-                                    Cancelar
+                                <button className="btn-cancel-icon" type="button" onClick={() => setIsEditing(false)}>
+                                    <X size={20} />
                                 </button>
 
                                 <button className="btn btn-primary" type="button" onClick={saveCV}>
-                                    <Save size={18} /> Guardar CV
+                                    <Save size={18} />
                                 </button>
                             </div>
                         </div>
