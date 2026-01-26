@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 
 import '../styles/jobDetails.css'
+import Stepper from '../components/CreateRouteMap';
 
 export default function JobsDetail() {
     const { id } = useParams();
@@ -72,7 +73,7 @@ export default function JobsDetail() {
                 </div>
             </div>
 
-            <div className="rode_map"></div>
+            <Stepper />
 
             <div className="postulation_content">
                 <div className="general_details_left">

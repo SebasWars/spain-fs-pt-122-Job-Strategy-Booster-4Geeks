@@ -1,0 +1,176 @@
+:root {
+  --back-color: #ffffff;
+  --card-color: #f2f2f2;
+  --font-color: #1b1b1b;
+  --ligther-font-color: #6f6f6f;
+  --main-color: #2b4eeb;
+  --main-color-hover: #6b82ec;
+  --completed-color: #34c759;
+  --remove-color: #e22727;
+  --remove-color-hover: #c94747;
+
+  --border-radius: 12px;
+  --transition: 0.25s ease-in-out;
+}
+
+.stages_container {
+  width: 100%;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: var(--border-radius);
+  background-color: var(--card-color);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stages_container h3 {
+  margin: 0;
+  color: var(--font-color);
+}
+
+.modify_route {
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  border: none;
+  background-color: var(--main-color);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background-color var(--transition),
+    transform var(--transition);
+}
+
+.modify_route:hover {
+  background-color: var(--main-color-hover);
+  transform: translateY(-2px);
+}
+
+.selector_container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.selector_container select {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background-color: var(--back-color);
+}
+
+.add_stage_btn {
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  border: none;
+  background-color: var(--main-color);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background-color var(--transition),
+    transform var(--transition);
+}
+
+.add_stage_btn:hover {
+  background-color: var(--main-color-hover);
+  transform: translateY(-2px);
+}
+
+/* Stepper */
+.stepper {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 20px;
+  padding-bottom: 10px;
+}
+
+.stepper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.stepper::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
+}
+
+/* Individual stages */
+.stage {
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  gap: 6px;
+  scroll-snap-align: start;
+  position: relative;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition);
+}
+
+.stage.connected::after {
+  content: "";
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  width: 180px;
+  height: 3px;
+  background-color: var(--main-color);
+  transform: translateY(-50%);
+  z-index: -1;
+  border-radius: 2px;
+}
+
+.step {
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin-bottom: 6px;
+  background-color: var(--main-color);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color var(--transition),
+    transform var(--transition);
+}
+
+.stage.completed .step {
+  background-color: var(--completed-color);
+}
+
+.stage p {
+  font-size: 13px;
+  text-align: center;
+  color: var(--font-color);
+  margin: 0;
+}
+
+/* Animation */
+.stage {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
