@@ -21,7 +21,7 @@ export default function JobsDetail() {
         try {
             await removePostulation(postulation.id, authorizationHeader);
             console.log('Postulation eliminada correctamente');
-            navigate('/jobs');
+            navigate('/postulations');
         } catch (error) {
             console.error('Error eliminando la postulación:', error);
         }
@@ -50,7 +50,7 @@ export default function JobsDetail() {
         <div className="job_details">
             <div className="header">
                 <div className="left_side">
-                    <Link to='/Jobs'><span><FontAwesomeIcon icon={faArrowLeft} />Volver a lista de postulaciones</span></Link>
+                    <Link to='/postulations'><span><FontAwesomeIcon icon={faArrowLeft} />Volver a lista de postulaciones</span></Link>
                     <h1>{postulation.company_name}</h1>
                     <p>{postulation.role}</p>
                 </div>

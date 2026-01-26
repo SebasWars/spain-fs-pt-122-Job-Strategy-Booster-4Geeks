@@ -19,7 +19,7 @@ function JobCard2({ post }) {
                     <span className="status">{post.postulation_state}</span>
                     <span className="category">{post.company_name}</span>
                 </div>
-                <Link to={`/postulacion/${post.id}`}>
+                <Link to={`/postulations/${post.id}`}>
                     <button className="view_details">Detalles</button>
                 </Link>
             </div>
