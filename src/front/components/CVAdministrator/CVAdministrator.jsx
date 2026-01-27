@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../hooks/UserContextProvier.jsx";
-import Sidebar from "./Sidebar.jsx";
 import CVPreview from "./CVPreview.jsx";
 import CVEditor from "./CVEditor.jsx";
 import { createEmptyCV, cloneCV } from "./utils/cvHelpers.js";
 import "../../styles/CVAdministrator.css";
-
+import ModalAgregarCV from "./ModalAgregarCV.jsx";
 
 const CVAdministrator = () => {
     const { token } = useContext(UserContext);
@@ -17,10 +16,19 @@ const CVAdministrator = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [showAgregarModal, setShowAgregarModal] = useState(false);
 
     useEffect(() => {
         if (token) loadCVList();
     }, [token]);
+
+    const normalizeCV = (datos) => ({
+        ...datos,
+        experiencia: datos.experiencia || [],
+        educacion: datos.educacion || [],
+        habilidades: datos.habilidades || [],
+        idiomas: datos.idiomas || []
+    });
 
     const loadCVList = async () => {
         setIsLoading(true);
@@ -35,7 +43,7 @@ const CVAdministrator = () => {
 
                 if (data.cvs.length > 0) {
                     setSelectedCVId(data.cvs[0].id);
-                    setFormData(data.cvs[0]);
+                    setFormData(normalizeCV(data.cvs[0].datos));
                 }
             }
         } catch (err) {
@@ -49,7 +57,7 @@ const CVAdministrator = () => {
         const cv = cvList.find((c) => c.id === id);
         if (cv) {
             setSelectedCVId(id);
-            setFormData(cv);
+            setFormData(normalizeCV(cv.datos));
             setIsEditing(false);
         }
     };
@@ -59,15 +67,17 @@ const CVAdministrator = () => {
         setFormData(updated);
 
         setCvList((prev) =>
-            prev.map((cv) => (cv.id === selectedCVId ? updated : cv))
+            prev.map((cv) =>
+                cv.id === selectedCVId ? { ...cv, datos: updated } : cv
+            )
         );
     };
 
     const createNewCV = () => {
         const nuevo = createEmptyCV();
         setCvList((prev) => [...prev, nuevo]);
-        setSelectedCVId(nuevo.id);
-        setFormData(nuevo);
+        setSelectedCVId(null);
+        setFormData(normalizeCV(nuevo.datos));
         setIsEditing(true);
     };
 
@@ -90,7 +100,7 @@ const CVAdministrator = () => {
                 if (data.success) {
                     setCvList((prev) => [...prev, data.cv]);
                     setSelectedCVId(data.cv.id);
-                    setFormData(data.cv.datos);
+                    setFormData(normalizeCV(data.cv.datos));
                     setIsEditing(false);
                 }
 
@@ -113,7 +123,7 @@ const CVAdministrator = () => {
                 setCvList((prev) =>
                     prev.map((cv) => (cv.id === selectedCVId ? data.cv : cv))
                 );
-                setFormData(data.cv.datos);
+                setFormData(normalizeCV(data.cv.datos));
                 setIsEditing(false);
             }
         } catch (err) {
@@ -123,22 +133,21 @@ const CVAdministrator = () => {
         }
     };
 
-
-    const deleteCV = async () => {
+    const deleteCV = async (cvId) => {
         if (!confirm("¿Seguro que deseas eliminar este CV?")) return;
 
         try {
-            await fetch(`${backendUrl}/api/cv/${selectedCVId}`, {
+            await fetch(`${backendUrl}/api/cv/${cvId}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            const updatedList = cvList.filter((cv) => cv.id !== selectedCVId);
+            const updatedList = cvList.filter((cv) => cv.id !== cvId);
             setCvList(updatedList);
 
             if (updatedList.length > 0) {
                 setSelectedCVId(updatedList[0].id);
-                setFormData(updatedList[0]);
+                setFormData(normalizeCV(updatedList[0].datos));
             } else {
                 setSelectedCVId(null);
                 setFormData(null);
@@ -148,37 +157,90 @@ const CVAdministrator = () => {
         }
     };
 
-    const cloneSelectedCV = () => {
-        const original = cvList.find((cv) => cv.id === selectedCVId);
+    const handleView = (id) => {
+        selectCV(id);
+        setIsEditing(false);
+    };
+
+    const handleEdit = (id) => {
+        selectCV(id);
+        setIsEditing(true);
+    };
+
+    const handleSelectForAdd = (id) => {
+        const original = cvList.find((cv) => cv.id === id);
+        if (!original) return;
+
+        const copia = normalizeCV(original.datos);
+        copia.titulo = "";
+
+        setFormData(copia);
+        setSelectedCVId(null);
+        setIsEditing(true);
+        setShowAgregarModal(false);
+    };
+
+    const handleAddFrom = (id) => {
+        const original = cvList.find((cv) => cv.id === id);
         if (!original) return;
 
         const copia = cloneCV(original);
+        copia.datos = normalizeCV(copia.datos);
+        copia.datos.titulo = "";
 
         setCvList((prev) => [...prev, copia]);
-        setSelectedCVId(copia.id);
-        setFormData(copia);
+        setSelectedCVId(null);
+        setFormData(copia.datos);
         setIsEditing(true);
     };
 
     return (
-        <div className="cv-layout">
+        <div className="cv-admin-container">
 
-            <div className="cv-bar-horizontal">
-                {cvList.map((cv) => (
-                    <div key={cv.id} className="cv-card">
-                        <div className="cv-title">{cv.datos.titulo || "CV sin título"}</div>
-                        <div className="cv-actions">
-                            <button onClick={() => handleEdit(cv.id)}>🖉</button>
-                            <button onClick={() => handleAddFrom(cv.id)}>📄</button>
-                            <button onClick={() => handleDelete(cv.id)}>🗑️</button>
-                        </div>
-                    </div>
-                ))}
+            {showAgregarModal && (
+                <ModalAgregarCV
+                    cvList={cvList}
+                    onSelect={handleSelectForAdd}
+                    onClose={() => setShowAgregarModal(false)}
+                />
+            )}
 
-                <button className="cv-new-button" onClick={handleCreateNewCV}>
-                    + Nuevo CV
-                </button>
+            <div className="cv-topbar">
+                <div className="cv-topbar-title">Administrador de CVs</div>
+
+                <div className="cv-topbar-actions">
+                    <button onClick={createNewCV}>+ Nuevo CV</button>
+                    <button onClick={() => setShowAgregarModal(true)}>Agregar</button>
+                </div>
             </div>
+
+            <table className="cv-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del CV</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {cvList.map((cv) => (
+                        <tr key={cv.id}>
+                            <td>{cv.datos.titulo || "Sin título"}</td>
+                            <td>{new Date(cv.created_at).toLocaleDateString()}</td>
+
+                            <td>
+                                <div className="cv-actions-row">
+                                    <button onClick={() => handleView(cv.id)}>👁️</button>
+                                    <button onClick={() => handleEdit(cv.id)}>🖉</button>
+                                    <button onClick={() => handleAddFrom(cv.id)}>📄</button>
+                                    <button onClick={() => deleteCV(cv.id)}>🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
 
             <main className="cv-main">
                 {isLoading ? (
@@ -196,14 +258,14 @@ const CVAdministrator = () => {
                         formData={formData}
                         setIsEditing={setIsEditing}
                         deleteCV={deleteCV}
-                        cloneCV={cloneSelectedCV}
+                        cloneCV={cloneCV}
                     />
                 ) : (
                     <p>No hay CV seleccionado</p>
                 )}
             </main>
         </div>
-    )
+    );
 };
 
 export default CVAdministrator;

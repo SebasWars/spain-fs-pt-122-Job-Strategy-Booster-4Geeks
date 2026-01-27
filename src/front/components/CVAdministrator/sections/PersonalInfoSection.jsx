@@ -14,6 +14,7 @@ const PersonalInfoSection = ({ formData, updateCurrentCV }) => {
     return (
         <div className="cv-form-section">
             <h3 className="cv-form-title">Información Personal</h3>
+
             <div className="cv-form-group">
                 <label>Nombre del CV</label>
                 <input
@@ -24,17 +25,7 @@ const PersonalInfoSection = ({ formData, updateCurrentCV }) => {
                 />
             </div>
 
-
-
             <div className="cv-profile-upload">
-                <input
-                    type="file"
-                    accept="image/*"
-                    id="profilePhoto"
-                    className="file-input-hidden"
-                    onChange={handlePhotoUpload}
-                />
-
                 <div className="cv-profile-row">
                     <label htmlFor="profilePhoto" className="btn btn-photo">
                         <Camera size={20} /> Foto
@@ -49,7 +40,6 @@ const PersonalInfoSection = ({ formData, updateCurrentCV }) => {
                     )}
                 </div>
             </div>
-
 
             <div className="cv-form-grid">
                 <div className="cv-form-group">
@@ -113,7 +103,6 @@ const PersonalInfoSection = ({ formData, updateCurrentCV }) => {
                     />
                 </div>
             </div>
-
 
             <div className="cv-form-group">
                 <label>Resumen profesional</label>

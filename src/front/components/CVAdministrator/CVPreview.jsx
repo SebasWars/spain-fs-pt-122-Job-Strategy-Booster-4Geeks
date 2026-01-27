@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit2, Trash2, FileText, Copy } from "lucide-react";
+import { Edit2, Trash2, FileText, Copy, MapPin, Mail, Phone, Linkedin, Github } from "lucide-react";
 
 const CVPreview = ({ formData, setIsEditing, deleteCV, cloneCV }) => {
     const downloadPDF = () => {
@@ -7,10 +7,16 @@ const CVPreview = ({ formData, setIsEditing, deleteCV, cloneCV }) => {
         const doc = printWindow.document;
 
         doc.write("<html><head><title>CV</title></head><body>");
+
+        if (formData.foto) {
+            doc.write(`<img src="${formData.foto}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:20px;" />`);
+        }
+
         doc.write(`<h1>${formData.nombre}</h1>`);
         doc.write(`<p>${formData.email}</p>`);
         doc.write(`<p>${formData.telefono}</p>`);
         doc.write(`<p>${formData.ubicacion}</p>`);
+
         doc.write("</body></html>");
         doc.close();
 
@@ -45,9 +51,30 @@ const CVPreview = ({ formData, setIsEditing, deleteCV, cloneCV }) => {
 
             <div className="cv-preview-content">
                 <h3>Información Personal</h3>
-                <p><strong>Email:</strong> {formData.email}</p>
-                <p><strong>Teléfono:</strong> {formData.telefono}</p>
-                <p><strong>Ubicación:</strong> {formData.ubicacion}</p>
+
+                <div className="pdf-info-row">
+                    <Mail size={16} /> <span>{formData.email}</span>
+                </div>
+
+                <div className="pdf-info-row">
+                    <Phone size={16} /> <span>{formData.telefono}</span>
+                </div>
+
+                <div className="pdf-info-row">
+                    <MapPin size={16} /> <span>{formData.ubicacion}</span>
+                </div>
+
+                {formData.linkedin && (
+                    <div className="pdf-info-row">
+                        <Linkedin size={16} /> <span>{formData.linkedin}</span>
+                    </div>
+                )}
+
+                {formData.github && (
+                    <div className="pdf-info-row">
+                        <Github size={16} /> <span>{formData.github}</span>
+                    </div>
+                )}
 
                 {formData.resumen && (
                     <>

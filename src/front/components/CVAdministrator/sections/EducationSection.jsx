@@ -25,9 +25,9 @@ const EducationSection = ({ formData, updateCurrentCV }) => {
 
     return (
         <div className="cv-form-section">
-            <h3 className="cv-form-title">Formación Académica</h3>
+            <h3 className="cv-form-title">Educación</h3>
 
-            {(formData.educacion || []).map((edu, i) => (
+            {formData.educacion.map((edu, i) => (
                 <div key={i} className="cv-modal-card">
                     <button
                         className="cv-modal-close"
@@ -46,7 +46,7 @@ const EducationSection = ({ formData, updateCurrentCV }) => {
                                 onChange={(e) =>
                                     updateEducation(i, "institucion", e.target.value)
                                 }
-                                placeholder="Universidad o institución"
+                                placeholder="Nombre de la institución"
                             />
                         </div>
 
@@ -70,7 +70,7 @@ const EducationSection = ({ formData, updateCurrentCV }) => {
                                 onChange={(e) =>
                                     updateEducation(i, "periodo", e.target.value)
                                 }
-                                placeholder="Ej: 2016 - 2020"
+                                placeholder="Ej: 2018 - 2022"
                             />
                         </div>
                     </div>
@@ -78,7 +78,7 @@ const EducationSection = ({ formData, updateCurrentCV }) => {
             ))}
 
             <button className="btn btn-outline" type="button" onClick={addEducation}>
-                <Plus size={18} /> Agregar formación académica
+                <Plus size={18} /> Agregar educación
             </button>
         </div>
     );
