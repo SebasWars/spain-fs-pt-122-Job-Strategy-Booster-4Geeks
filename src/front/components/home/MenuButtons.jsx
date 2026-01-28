@@ -1,7 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react";
 
-function MenuButttons({ options }) {
+function MenuButttons({ options, onFilterChange }) {
     const [active, setActive] = useState(options[0]);
+
+    useEffect(() => {
+        if (onFilterChange) onFilterChange(active);
+    }, [active, onFilterChange]);
 
     return (
         <div className="menu_options">
@@ -18,4 +22,4 @@ function MenuButttons({ options }) {
     );
 }
 
-export default MenuButttons
+export default MenuButttons;

@@ -7,6 +7,46 @@
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.2);
+.cv-admin-container {
+  margin-bottom: 2800px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+  padding: 2.5rem 1.5rem;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+}
+
+.cv-admin-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.cv-admin-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  padding: 1.75rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  margin-bottom: 2rem;
+  border-top: 4px solid #0891b2;
+}
+
+.cv-admin-title {
+  color: #0f172a;
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cv-admin-title svg {
+  color: #0891b2;
+}
+
+.cv-admin-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .btn {
