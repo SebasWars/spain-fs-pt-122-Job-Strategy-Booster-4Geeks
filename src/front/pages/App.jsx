@@ -21,7 +21,13 @@ export default function App() {
         return () => clearTimeout(timer);
     }, []);
 
+    if (!token) {
+        return <Registration />;
+    }
 
+    if (loading) {
+        return <LoadingScreen />;
+    }
 
     return (
         <div className="main_container">
