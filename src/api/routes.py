@@ -552,6 +552,7 @@ def profile_update(id):
 
 """ ------------------ ROUTE MAP ENDPOINTS --------------------- """
 
+
 @api.route('/postulations/<int:id>/route-map', methods=['GET'])
 @jwt_required()
 def get_route_map(id):
@@ -607,3 +608,29 @@ def create_or_replace_route_map(id):
         "message": "Stages saved successfully",
         "stages": [s.serialize() for s in new_stages]
     }), 200
+
+@api.route('/postulations/<int:id>/route-map', methods=['DELETE'])
+@jwt_required()
+def remove_stage(id):
+    current_user = get_jwt_identity()
+
+    postulation = Postulations.query.filter_by(
+        id=id,
+        user_id=current_user
+    ).first()
+
+    if not postulation:
+        return jsonify({"error": "Postulation not found"}), 404
+
+    stage_id = request.args.get('stage_id', type=int)
+    if not stage_id:
+        return jsonify({"error": "stage_id is required"}), 400
+
+    stage = Stages.query.filter_by(postulation_id=id, id=stage_id).first()
+    if not stage:
+        return jsonify({'error': 'Stage not found'}), 404
+
+    db.session.delete(stage)
+    db.session.commit()
+
+    return jsonify({'message': 'Stage has been removed'}), 200
