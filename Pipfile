@@ -24,6 +24,8 @@ flask-migrate = "*"
 python-dotenv = "*"
 openai = "*"
 colorama = "*"
+pytesseract = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.13"

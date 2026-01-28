@@ -9,7 +9,9 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 import json
 from datetime import datetime
 from api.data_mock.mock_data import jobs
-from datetime import datetime
+from datetime import datetime,date
+import pytesseract
+from PIL import Image
 
 api = Blueprint('api', __name__)
 from dotenv import load_dotenv
@@ -18,6 +20,7 @@ import traceback
 import openai
 import requests  
 from werkzeug.utils import secure_filename
+import re
 
 CORS(api)
 bcrypt = Bcrypt()
@@ -25,12 +28,14 @@ bcrypt = Bcrypt()
 bcrypt = Bcrypt()  
 
 load_dotenv()  
-api_key = ("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")
+api_key = ("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")
 bcrypt = Bcrypt() 
 
 
 openai.api_key = api_key
 GOOGLE_API_KEY = "AIzaSyC-8znGPyiPtg52au8Qm8m1NQehlPLS_uI"
+sessions = {}
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 @api.route('/translate', methods=['POST'])
 def translate():
@@ -60,30 +65,373 @@ def translate():
 
         return jsonify({"error": str(err), "details": response.text}), 500
 
-@api.route('/chat', methods=['POST'])
+QUESTIONS = {
+    "frontend": [
+        "¿Qué es el Virtual DOM y por qué es importante?",
+        "¿Qué es CSS Flexbox y para qué sirve?",
+        "¿Qué es un closure en JavaScript?",
+        "¿Cuál es la diferencia entre 'var', 'let' y 'const' en JavaScript?",
+        "¿Qué son las promesas en JavaScript y cómo funcionan?",
+        "¿Cómo manejas eventos en JavaScript?",
+        "¿Qué es el modelo de caja (box model) en CSS?",
+        "¿Qué son las media queries y cómo se usan para responsive design?",
+        "¿Qué es la herencia en CSS y cómo funciona?"
+    ],
+    "backend": [
+        "¿Qué es una API REST?",
+        "¿Qué es una base de datos relacional?",
+        "¿Qué son los middlewares en backend?",
+        "¿Qué diferencias hay entre SQL y NoSQL?",
+        "¿Qué es la autenticación y autorización?",
+        "¿Qué es un token JWT y para qué se usa?",
+        "¿Cómo funciona el manejo de sesiones en aplicaciones web?",
+        "¿Qué es un servidor web y cómo funciona?",
+        "¿Qué es la escalabilidad en backend?"
+    ],
+    "react": [
+        "¿Qué es el estado (state) en React?",
+        "¿Qué es un Hook?",
+        "¿Cómo funcionan los componentes funcionales?",
+        "¿Qué es el ciclo de vida de un componente en React?",
+        "¿Qué es Redux y para qué se utiliza?",
+        "¿Qué es el Context API en React?",
+        "¿Cómo optimizas el rendimiento en una aplicación React?",
+        "¿Qué son las props y cómo se usan?",
+        "¿Qué diferencia hay entre componentes controlados y no controlados?"
+    ],
+    "angular": [
+        "¿Qué es un módulo en Angular?",
+        "¿Qué es un servicio en Angular?",
+        "¿Qué es RxJS y cómo se usa?",
+        "¿Qué es el data binding en Angular?",
+        "¿Qué son los decoradores en Angular?",
+        "¿Cómo funcionan los pipes en Angular?",
+        "¿Qué es la inyección de dependencias?",
+        "¿Qué es un componente y cómo se comunica con otros?",
+        "¿Cómo manejas el enrutamiento en Angular?"
+    ]
+    ,"personal": [
+        "¿Dónde te ves en cinco años?",
+        "¿Cuál es tu mayor fortaleza y debilidad?",
+        "¿Cómo manejas el estrés o la presión en el trabajo?",
+        "Descríbeme una situación en la que hayas tenido que resolver un conflicto.",
+        "¿Por qué quieres trabajar con nosotros?",
+        "¿Qué te motiva a dar lo mejor de ti?",
+        "¿Cómo te mantienes actualizado y mejorando profesionalmente?",
+        "Cuéntame sobre un error que hayas cometido y cómo lo solucionaste.",
+        "¿Prefieres trabajar en equipo o de forma independiente? ¿Por qué?"
+    ]
+}
+
+
+RESOURCES = {
+    "frontend": [
+        "https://roadmap.sh/frontend",
+        "https://frontendmentor.io",
+        "https://cssbattle.dev",
+    ],
+    "backend": [
+        "https://roadmap.sh/backend",
+        "https://leetcode.com",
+        "https://sqlbolt.com",
+    ],
+    "react": [
+        "https://roadmap.sh/react",
+        "https://react.dev/learn",
+        "https://frontendmentor.io",
+    ],
+    "angular": [
+        "https://roadmap.sh/angular",
+        "https://angular.io/tutorial",
+        "https://rxjs.dev",
+    ],
+}
+
+
+
+def clean_company_name(line: str, max_length=50) -> str:
+    line = re.sub(r"http\S+", "", line)
+    line = re.sub(r"\d+", "", line)
+    line = re.sub(r"[^\w\s.,-]", "", line)
+    line = line.strip()
+    return line[:max_length]
+
+
+def extract_postulation_fields(text):
+    clean_text = text.replace("€", " €").replace("$", " $")
+    lines = [l.strip() for l in clean_text.split("\n") if len(l.strip()) > 3]
+    full_text = " ".join(lines).lower()
+
+    data = {
+        "company_name": None,
+        "role": None,
+        "city": None,
+        "platform": None,
+        "work_type": "Unknown",
+        "experience": 0,
+        "salary": 0,
+        "candidates_applied": 0,
+        "postulation_url": None,
+        "requirements": [],
+        "job_description": clean_text[:800]
+    }
+
+    for line in lines:
+        if " at " in line.lower():
+            parts = re.split(r"\s+at\s+", line, flags=re.IGNORECASE)
+            if len(parts) == 2:
+                data["role"] = parts[0].strip()
+                data["company_name"] = clean_company_name(parts[1])
+                break
+
+    if not data["company_name"]:
+        for line in lines:
+            if "empresa" in line.lower():
+                data["company_name"] = clean_company_name(line)
+                break
+
+    if not data["company_name"] and lines:
+        data["company_name"] = clean_company_name(lines[0])
+
+
+    if not data["role"]:
+        for line in lines:
+            if any(k in line.lower() for k in ["limpieza", "personal", "operario"]):
+                data["role"] = line.strip()
+                break
+
+    if not data["role"] and len(lines) > 1:
+        data["role"] = lines[1]
+
+
+   
+    city_match = re.search(r"municipio:\s*([a-záéíóúñ]+)", full_text)
+    if city_match:
+        data["city"] = city_match.group(1).title()
+
+    if not data["city"]:
+        city_match2 = re.search(r"\(([^)]*murcia[^)]*)\)", full_text)
+        if city_match2:
+            data["city"] = "Murcia"
+
+    if not data["city"]:
+        for city in ["murcia", "barcelona", "madrid", "valencia", "sevilla", "santander"]:
+            if city in full_text:
+                data["city"] = city.title()
+                break
+
+
+  
+    if "linkedin" in full_text:
+        data["platform"] = "Linkedin"
+    elif "sefcarm" in full_text or "sefoficinavirtual" in full_text:
+        data["platform"] = "Sefcarm"
+
+
+
+    if "presencial" in full_text or "on-site" in full_text:
+        data["work_type"] = "Presencial"
+    elif "remoto" in full_text or "remote" in full_text:
+        data["work_type"] = "Remoto"
+    elif "híbrido" in full_text or "hybrid" in full_text:
+        data["work_type"] = "Híbrido"
+
+    if "lunes a viernes" in full_text:
+        data["work_type"] = "Presencial"
+
+
+
+    exp_match = re.search(r"experiencia.*?(\d+)\s*(meses|años)", full_text)
+    if exp_match:
+        num = int(exp_match.group(1))
+        data["experience"] = num if "meses" in exp_match.group(2) else num * 12
+
+
+    salary_match = re.search(r"(\d{3,5})\s*euros", full_text)
+    if salary_match:
+        data["salary"] = int(salary_match.group(1))
+
+
+    applied_match = re.search(r"más de (\d+)\s+solicitudes", full_text)
+    if applied_match:
+        data["candidates_applied"] = int(applied_match.group(1))
+
+
+   
+    for line in lines:
+        if any(kw in line.lower() for kw in ["se requiere", "tener", "poseer", "estar inscrito"]):
+            data["requirements"].append(line.strip())
+
+    for line in lines:
+        if any(kw in line.lower() for kw in ["aptitudes", "habilidades"]):
+            data["requirements"].append(line.strip())
+
+
+
+    url_match = re.search(r"(https?://[^\s]+)", text)
+    if url_match:
+        data["postulation_url"] = url_match.group(1)
+
+    return data
+
+
+@api.route("/ocr-postulation", methods=["POST"])
+@jwt_required()
+def ocr_postulation():
+    file = request.files.get("image")
+    if not file:
+        return jsonify({"error": "No image file provided"}), 400
+
+    current_user = get_jwt_identity()
+
+    upload_dir = "uploads"
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+
+    path = os.path.join(upload_dir, file.filename)
+    file.save(path)
+
+    img = Image.open(path)
+    text = pytesseract.image_to_string(img)
+
+    data = extract_postulation_fields(text)
+
+    requirements = data.get("requirements")
+    if not isinstance(requirements, list):
+        requirements = []
+
+    postulation = Postulations(
+        postulation_state="pending",
+        company_name=data.get("company_name") or "Unknown",
+        role=data.get("role") or "Unknown",
+        experience=data.get("experience", 0),
+        inscription_date=date.today(),
+        city=data.get("city") or "Unknown",
+        salary=data.get("salary", 0),
+        platform=data.get("platform") or "Unknown",
+        postulation_url="",
+        work_type=data.get("work_type") or "Unknown",
+        requirements=requirements,
+        candidates_applied=data.get("candidates_applied") or 0,
+        available_positions=1,
+        job_description=data.get("job_description"),
+        user_id=current_user
+    )
+
+    db.session.add(postulation)
+    db.session.commit()
+
+    return jsonify(postulation.serialize()), 201
+@api.route('/chat',methods=["POST"])
+@jwt_required()
 def chat():
     try:
-        data = request.json
-        if not data or 'message' not in data:
-            return jsonify({'response': 'No message provided'}), 400
+        user_id = get_jwt_identity()
+        data = request.json or {}
+        user_message = data.get("message", "").lower().strip()
+        
+        if user_id not in sessions:
+            sessions[user_id] = {
+                "state": "WAIT_READY",
+                "role": None,
+                "question_index": 0
+            }
+            return jsonify({
+                "response": "👋 ¿Estás listo para una simulación de entrevista? (sí / no)"
+            })
 
-        user_message = data['message']
+        session = sessions[user_id]
 
-        # Example:
-        response = openai.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_message}
-            ]
-        )
-        bot_reply = response.choices[0].message.content
-        return jsonify({"response": bot_reply})
+        if session["state"] == "WAIT_READY":
+            if user_message in ["si", "sí", "yes"]:
+                session["state"] = "WAIT_ROLE"
+                return jsonify({
+                    "response": (
+                        "Perfecto 🚀\n"
+                        "Elige el tipo de entrevista:\n"
+                        "1) Frontend (FE)\n"
+                        "2) Backend (BE)\n"
+                        "3) React\n"
+                        "4) Angular\n"
+                        "5) Preguntas personales"
+                    )
+                })
+
+            if user_message in ["no", "nop", "nope"]:
+                return jsonify({
+                    "response": "👌 Cuando estés listo escribe 'sí'."
+                })
+
+            return jsonify({
+                "response": "Por favor responde únicamente: sí o no."
+            })
+
+        if session["state"] == "WAIT_ROLE":
+            roles = {
+                "1": "frontend",
+                "2": "backend",
+                "3": "react",
+                "4": "angular",
+                "5": "personal"
+            }
+
+            if user_message not in roles:
+                return jsonify({
+                    "response": "Selecciona una opción válida (1-5)."
+                })
+
+            role = roles[user_message]
+            session["role"] = role
+            session["state"] = "INTERVIEW"
+            session["question_index"] = 0
+
+            first_question = QUESTIONS[role][0]
+            return jsonify({
+                "response": (
+                    f"🎯 Entrevista {role.upper()} iniciada.\n\n"
+                    f"Pregunta 1:\n{first_question}"
+                )
+            })
+
+        if session["state"] == "INTERVIEW":
+            role = session["role"]
+            q_index = session.get("question_index", 0)
+
+
+            q_index += 1
+    
+            if q_index < len(QUESTIONS[role]):
+                session["question_index"] = q_index
+                next_question = QUESTIONS[role][q_index]
+                return jsonify({
+                    "response": f"Pregunta {q_index + 1}:\n{next_question}"
+                })
+            else:
+                session["state"] = "FINISHED"
+                resources = "\n".join(f"- {url}" for url in RESOURCES.get(role, []))
+                return jsonify({
+                    "response": (
+                        "✅ ¡Buen trabajo!\n\n"
+                        "📚 Recursos recomendados para seguir entrenando:\n"
+                        f"{resources}\n\n"
+                        "¿Quieres otra simulación? (sí / no)"
+                    )
+                })
+
+        if session["state"] == "FINISHED":
+            if user_message in ["si", "sí", "yes"]:
+                session["state"] = "WAIT_ROLE"
+                session["question_index"] = 0
+                return jsonify({
+                    "response": "Perfecto 👍 Elige nuevamente una opción (1-5)."
+                })
+
+            return jsonify({
+                "response": "👋 Gracias por practicar. ¡Éxitos!"
+            })
 
     except Exception as e:
-        traceback.print_exc()  
-        return jsonify({"response": f"Error: {str(e)}"}), 500
-    
+        return jsonify({"error": str(e)}), 500
 
 def save_uploaded_file(file, upload_folder=None):
     if not file:
