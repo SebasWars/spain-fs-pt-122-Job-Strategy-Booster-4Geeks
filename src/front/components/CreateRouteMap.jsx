@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import '../styles/stepper.css'
+import { useNavigate } from "react-router-dom";
+import useGetAuthorizationHeader from "../hooks/useGetAuthorizationHeader";
+import { createNewRoute, getRoutes } from '../Fetch/routeMapFecth'
+import { faL } from "@fortawesome/free-solid-svg-icons";
 
-const WORK_STAGES = [
+export const WORK_STAGES = [
     { value: "initial_contact", label: "Toma de contacto inicial" },
     { value: "hr_interview", label: "Entrevista RH" },
     { value: "technical_test", label: "Prueba técnica" },
@@ -17,68 +21,88 @@ const WORK_STAGES = [
     { value: "process_closure", label: "Cierre del proceso" }
 ];
 
-const Stepper = () => {
-    const [selectedStage, setSelectedStage] = useState(WORK_STAGES[0].value);
-    const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-    const [stages, setStages] = useState([]); // listado de etapas añadidas
-    const [loading, setLoading] = useState(false);
+const Stepper = ({ stages, id, setStages }) => {
+    const authorizationHeader = useGetAuthorizationHeader()
+    const [stageData, setStageData] = useState(WORK_STAGES[0].value)
+    const navigate = useNavigate()
+    const [hoverIndex, setHorverIndex] = useState(false)
 
     const handleAddStage = () => {
-        setLoading(true);
-        setStages(prev => [...prev, WORK_STAGES.find(s => s.value === selectedStage).label]);
-        setLoading(false);
-    };
+        setStages(prev => [...prev, stageData]);
+        setStageData(WORK_STAGES[0].value);
+        console.log(stages)
+    }
+
+    const handleSubmit = async (e) => {
+        if (stages.length === 0) {
+            console.warn("No hay stages para enviar");
+            return;
+        }
+
+        const stagesList = await createNewRoute(stages, id, authorizationHeader);
+        console.log('Nuevo mapa creado', stagesList);
+        navigate(-1)
+    }
+
 
     return (
         <div className="stages_container">
             <div className="header">
-                <h2>Tu proceso</h2>
-                <button
-                    onClick={() => setIsSelectorOpen(prev => !prev)}
-                    className="modify_route"
+                <h3>Tu proceso</h3>
+                <div className="options_buttons">
+                    <button onClick={() => navigate(-1)} className="discard_btn">Descartar</button>
+                    <button onClick={handleSubmit} className="save_btn">Guardar</button>
+                </div>
+            </div>
+            <div className="selector_container">
+                <select
+                    value={stageData}
+                    onChange={(e) => setStageData(prev => (e.target.value))}
                 >
-                    {isSelectorOpen ? "Cerrar selector" : "Modificar ruta"}
+                    {WORK_STAGES.map(stage => (
+                        <option key={stage.value} value={stage.value}>
+                            {stage.label}
+                        </option>
+                    ))}
+                </select>
+
+                <button onClick={handleAddStage} className="add_stage_btn" >
+                    Añadir etapa
                 </button>
             </div>
-
-            {isSelectorOpen && (
-                <div className="selector_container">
-                    <select
-                        value={selectedStage}
-                        onChange={(e) => setSelectedStage(e.target.value)}
-                    >
-                        {WORK_STAGES.map(stage => (
-                            <option key={stage.value} value={stage.value}>
-                                {stage.label}
-                            </option>
-                        ))}
-                    </select>
-                    <button onClick={handleAddStage} className="add_stage_btn" disabled={loading}>
-                        {loading ? "Añadiendo..." : "Añadir etapa"}
-                    </button>
-                </div>
-            )}
-
-            {stages.length === 0 ? (
-                <h4>No tienes un proceso creado</h4>
-            ) : (
-                <div className="stepper">
-                    {stages.map((label, index) => {
+            <div className="stepper">
+                {stages.length === 0 ? (
+                    <h4>No tienes un proceso creado</h4>
+                ) : (
+                    stages.map((stage, index) => {
                         const isLast = index === stages.length - 1;
+                        const stageValue = stage.stage_name || stage;
+                        const foundStage = WORK_STAGES.find(s => s.value === stageValue);
+                        const label = foundStage ? foundStage.label : stageValue;
                         return (
-                            <div
-                                key={index}
-                                className={`stage ${!isLast ? "connected" : ""} completed`}
-                            >
-                                <div className="step">{index + 1}</div>
+                            <div key={`${stage.stage_name}-${index}`} className={`stage ${!isLast ? "connected" : ""}`}>
+                                <div onMouseEnter={() => setHorverIndex(index)} onMouseLeave={() => setHorverIndex(null)} className={`step ${hoverIndex === index ? 'hovered' : ''}`}>{hoverIndex === index ? 'X' : index + 1}</div>
                                 <p>{label}</p>
                             </div>
                         );
-                    })}
-                </div>
-            )}
+                    })
+                )}
+            </div>
         </div>
     );
 };
 
-export default Stepper;
+export default Stepper
+
+/* date_completed_stage
+: 
+null
+id
+: 
+33
+stage_completed
+: 
+false
+stage_name
+: 
+"initial_contact" */
