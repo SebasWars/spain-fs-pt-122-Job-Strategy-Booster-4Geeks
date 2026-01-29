@@ -25,6 +25,8 @@ python-dotenv = "*"
 openai = "*"
 colorama = "*"
 requests = "*"
+pytesseract = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.13"
