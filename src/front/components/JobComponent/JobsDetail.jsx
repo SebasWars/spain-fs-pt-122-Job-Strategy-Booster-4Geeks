@@ -33,19 +33,19 @@ export default function JobsDetail() {
         return link.split('/').slice(0, 3).join('')
     }
 
-    const closeStepper = () => {
-        if (isRouteMap) {
-            if (stages.length > 0) {
-                const confirmationClose = window.confirm('Si cierras el modificador de rutas, no se guardaran datos, quieres cerrarlo de todas maneras?')
-                if (!confirmationClose) return
+    /*     const closeStepper = () => {
+            if (isRouteMap) {
+                if (stages.length > 0) {
+                    const confirmationClose = window.confirm('Si cierras el modificador de rutas, no se guardaran datos, quieres cerrarlo de todas maneras?')
+                    if (!confirmationClose) return
+                }
+                setStages([])
+                navigate(-1)
+            } else {
+                ;
             }
-            setStages(stages)
-            navigate(-1)
-        } else {
-            navigate(`/postulations/${id}/route-map`);
         }
-    }
-
+     */
 
     useEffect(() => {
         const fetchPostulation = async () => {
@@ -90,10 +90,11 @@ export default function JobsDetail() {
                 <div className="rigth_side">
                     <button className='update'>Actualizar</button>
                     <button onClick={handleDelete} className='delete'>Eliminar</button>
-                    <button onClick={closeStepper}>
-                        {isRouteMap ? 'Cerrar' : 'Modificar ruta'}
-                    </button>
-
+                    {!isRouteMap && (
+                        <button onClick={() => navigate(`/postulations/${id}/route-map`)}>
+                            Modificar ruta
+                        </button>
+                    )}
                 </div>
             </div>
 

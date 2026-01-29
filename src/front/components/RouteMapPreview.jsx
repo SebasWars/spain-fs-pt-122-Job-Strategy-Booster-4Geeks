@@ -4,7 +4,7 @@ import { faAnglesLeft, faAnglesRight } from "@fortawesome/free-solid-svg-icons";
 
 const RouteMapPreview = ({ stages }) => (
     <div className="stages_container">
-        <div className="header">
+        <div className="stages_header">
             <h3>Tu proceso</h3>
             <div className="action_buttons">
                 <button><FontAwesomeIcon icon={faAnglesLeft} /></button>

@@ -71,7 +71,7 @@ const Stepper = ({ stages, id, setStages }) => {
 
     return (
         <div className="stages_container">
-            <div className="header">
+            <div className="stages_header">
                 <h3>Tu proceso</h3>
                 <div className="options_buttons">
                     <button onClick={handleDiscard} className="discard_btn">Descartar</button>
