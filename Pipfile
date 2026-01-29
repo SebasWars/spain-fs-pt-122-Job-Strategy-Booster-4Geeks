@@ -25,6 +25,7 @@ python-dotenv = "*"
 openai = "*"
 colorama = "*"
 requests = "*"
+reportlab = "*"
 
 [requires]
 python_version = "3.13"

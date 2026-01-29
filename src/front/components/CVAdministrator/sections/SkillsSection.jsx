@@ -1,37 +1,42 @@
-import React from "react";
-import { Plus, XCircle, Wrench, Globe } from "lucide-react";
+import React, { useState } from "react";
+import { Wrench, Globe, XCircle } from "lucide-react";
 
+const SkillsSection = ({ habilidades, setHabilidades, idiomas, setIdiomas }) => {
+    const [skillInput, setSkillInput] = useState("");
+    const [langInput, setLangInput] = useState("");
 
-const SkillsSection = ({ formData, updateCurrentCV }) => {
-
-    const addSkill = () => {
-        updateCurrentCV("habilidades", [...formData.habilidades, ""]);
+    const agregarSkill = () => {
+        if (skillInput.trim() === "") return;
+        setHabilidades([...habilidades, skillInput.trim()]);
+        setSkillInput("");
     };
 
-    const updateSkill = (index, value) => {
-        const updated = [...formData.habilidades];
-        updated[index] = value;
-        updateCurrentCV("habilidades", updated);
+    const agregarIdioma = () => {
+        if (langInput.trim() === "") return;
+        setIdiomas([...idiomas, langInput.trim()]);
+        setLangInput("");
     };
 
-    const removeSkill = (index) => {
-        const updated = formData.habilidades.filter((_, i) => i !== index);
-        updateCurrentCV("habilidades", updated);
+    const manejarEnterSkill = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            agregarSkill();
+        }
     };
 
-    const addLanguage = () => {
-        updateCurrentCV("idiomas", [...formData.idiomas, ""]);
+    const manejarEnterIdioma = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            agregarIdioma();
+        }
     };
 
-    const updateLanguage = (index, value) => {
-        const updated = [...formData.idiomas];
-        updated[index] = value;
-        updateCurrentCV("idiomas", updated);
+    const eliminarSkill = (index) => {
+        setHabilidades(habilidades.filter((_, i) => i !== index));
     };
 
-    const removeLanguage = (index) => {
-        const updated = formData.idiomas.filter((_, i) => i !== index);
-        updateCurrentCV("idiomas", updated);
+    const eliminarIdioma = (index) => {
+        setIdiomas(idiomas.filter((_, i) => i !== index));
     };
 
     return (
@@ -41,73 +46,61 @@ const SkillsSection = ({ formData, updateCurrentCV }) => {
                 Habilidades e Idiomas
             </h3>
 
-            <h4 className="cv-subtitle">
-                <Wrench size={18} className="section-icon" />
-                Habilidades
-            </h4>
+            <div className="cv-form-group">
+                <label>Habilidades</label>
 
-            {(formData.habilidades || []).length === 0 && (
-                <p className="cv-section-empty">Aún no has agregado habilidades.</p>
-            )}
+                {habilidades.length === 0 && (
+                    <p className="cv-section-empty">Aún no has agregado habilidades.</p>
+                )}
 
-            {(formData.habilidades || []).map((skill, i) => (
-                <div key={i} className="cv-item cv-item-row">
-                    <input
-                        className="cv-input"
-                        value={skill}
-                        onChange={(e) => updateSkill(i, e.target.value)}
-                        placeholder="Ej: React, Comunicación, Liderazgo..."
-                    />
-
-                    <button
-                        className="cv-item-remove"
-                        type="button"
-                        onClick={() => removeSkill(i)}
-                    >
-                        <XCircle size={18} />
-                    </button>
+                <div className="chips-container">
+                    {habilidades.map((skill, i) => (
+                        <span key={i} className="chip">
+                            {skill}
+                            <button onClick={() => eliminarSkill(i)}>
+                                <XCircle size={16} />
+                            </button>
+                        </span>
+                    ))}
                 </div>
-            ))}
 
-            <button className="cv-add-btn" type="button" onClick={addSkill}>
-                <Plus size={18} /> Agregar habilidad
-            </button>
+                <input
+                    className="cv-input"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={manejarEnterSkill}
+                    placeholder="Añadir habilidad"
+                />
+            </div>
 
-            <h4 className="cv-subtitle">
-                <Globe size={18} className="section-icon" />
-                Idiomas
-            </h4>
+            <div className="cv-form-group">
+                <label>Idiomas</label>
 
-            {(formData.idiomas || []).length === 0 && (
-                <p className="cv-section-empty">Aún no has agregado idiomas.</p>
-            )}
+                {idiomas.length === 0 && (
+                    <p className="cv-section-empty">Aún no has agregado idiomas.</p>
+                )}
 
-            {(formData.idiomas || []).map((lang, i) => (
-                <div key={i} className="cv-item cv-item-row">
-                    <input
-                        className="cv-input"
-                        value={lang}
-                        onChange={(e) => updateLanguage(i, e.target.value)}
-                        placeholder="Ej: Español (Nativo), Inglés (B2)..."
-                    />
-
-                    <button
-                        className="cv-item-remove"
-                        type="button"
-                        onClick={() => removeLanguage(i)}
-                    >
-                        <XCircle size={18} />
-                    </button>
+                <div className="chips-container">
+                    {idiomas.map((lang, i) => (
+                        <span key={i} className="chip">
+                            {lang}
+                            <button onClick={() => eliminarIdioma(i)}>
+                                <XCircle size={16} />
+                            </button>
+                        </span>
+                    ))}
                 </div>
-            ))}
 
-            <button className="cv-add-btn" type="button" onClick={addLanguage}>
-                <Plus size={18} /> Agregar idioma
-            </button>
+                <input
+                    className="cv-input"
+                    value={langInput}
+                    onChange={(e) => setLangInput(e.target.value)}
+                    onKeyDown={manejarEnterIdioma}
+                    placeholder="Añadir idioma"
+                />
+            </div>
         </div>
-
     );
-
 };
 
 export default SkillsSection;

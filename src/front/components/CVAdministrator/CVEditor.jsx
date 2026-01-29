@@ -5,13 +5,25 @@ import EducationSection from "./sections/EducationSection.jsx";
 import SkillsSection from "./sections/SkillsSection.jsx";
 import { Save, XCircle } from "lucide-react";
 
-const CVEditor = ({ formData, updateCurrentCV, setIsEditing, saving, onSave }) => {
+const CVEditor = ({ formData, updateCurrentCV, setIsEditing, saving, onSave, onSaveAs }) => {
     const [showSaveAs, setShowSaveAs] = useState(false);
     const [cvName, setCvName] = useState(formData?.titulo || "");
 
+    const [habilidades, setHabilidades] = useState(formData.habilidades || []);
+    const [idiomas, setIdiomas] = useState(formData.idiomas || []);
+
+    const syncHabilidades = (lista) => {
+        setHabilidades(lista);
+        updateCurrentCV("habilidades", lista);
+    };
+
+    const syncIdiomas = (lista) => {
+        setIdiomas(lista);
+        updateCurrentCV("idiomas", lista);
+    };
+
     return (
         <div className="cv-editor-container">
-
             <div className="cv-editor-header">
                 <button
                     className="cv-close-button"
@@ -25,10 +37,15 @@ const CVEditor = ({ formData, updateCurrentCV, setIsEditing, saving, onSave }) =
             <PersonalInfoSection formData={formData} updateCurrentCV={updateCurrentCV} />
             <ExperienceSection formData={formData} updateCurrentCV={updateCurrentCV} />
             <EducationSection formData={formData} updateCurrentCV={updateCurrentCV} />
-            <SkillsSection formData={formData} updateCurrentCV={updateCurrentCV} />
+
+            <SkillsSection
+                habilidades={habilidades}
+                setHabilidades={syncHabilidades}
+                idiomas={idiomas}
+                setIdiomas={syncIdiomas}
+            />
 
             <div className="save-wrapper">
-
                 <div className="cv-editor-footer">
                     <button
                         className="btn-cancel-icon"
@@ -42,7 +59,7 @@ const CVEditor = ({ formData, updateCurrentCV, setIsEditing, saving, onSave }) =
                     <button
                         className="btn btn-primary"
                         type="button"
-                        onClick={() => onSave(formData)}
+                        onClick={() => onSave({ ...formData, habilidades, idiomas })}
                         disabled={saving}
                     >
                         {saving ? "Guardando..." : (
@@ -86,8 +103,10 @@ const CVEditor = ({ formData, updateCurrentCV, setIsEditing, saving, onSave }) =
                             <button
                                 className="circle-btn"
                                 onClick={() => {
-                                    onSave({
+                                    onSaveAs({
                                         ...formData,
+                                        habilidades,
+                                        idiomas,
                                         titulo: cvName,
                                         id: null
                                     });
@@ -100,7 +119,6 @@ const CVEditor = ({ formData, updateCurrentCV, setIsEditing, saving, onSave }) =
                         </div>
                     </div>
                 )}
-
             </div>
         </div>
     );

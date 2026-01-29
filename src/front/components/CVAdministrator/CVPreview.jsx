@@ -1,5 +1,5 @@
 import React from "react";
-import { Mail, Phone, MapPin, Linkedin, Github } from "lucide-react";
+import { Mail, Phone, MapPin, Globe, Wrench } from "lucide-react";
 
 const CVPreview = ({ formData }) => {
     return (
@@ -23,19 +23,13 @@ const CVPreview = ({ formData }) => {
                         <span>{formData.ubicacion || "Ciudad, País"}</span>
                     </div>
 
-                    {formData.linkedin && (
-                        <div className="cv-contact-line">
-                            <Linkedin size={18} className="cv-contact-icon" />
-                            <span>{formData.linkedin}</span>
-                        </div>
-                    )}
-
-                    {formData.github && (
-                        <div className="cv-contact-line">
-                            <Github size={18} className="cv-contact-icon" />
-                            <span>{formData.github}</span>
-                        </div>
-                    )}
+                    {Array.isArray(formData.redes) &&
+                        formData.redes.map((red, i) => (
+                            <div key={i} className="cv-contact-line">
+                                <Globe size={18} className="cv-contact-icon" />
+                                <span>{red.tipo}: {red.url}</span>
+                            </div>
+                        ))}
                 </div>
 
                 {formData.foto && (
@@ -53,6 +47,32 @@ const CVPreview = ({ formData }) => {
                 <div className="cv-summary-block">
                     <h2 className="cv-summary-title">Resumen profesional</h2>
                     <p className="cv-summary-text">{formData.resumen}</p>
+                </div>
+            )}
+
+            {Array.isArray(formData.habilidades) && formData.habilidades.length > 0 && (
+                <div className="cv-section-block">
+                    <h3 className="cv-section-title">
+                        <Wrench size={18} className="section-icon" />
+                        Habilidades
+                    </h3>
+
+                    {formData.habilidades.map((skill, i) => (
+                        <div key={i} className="cv-item">{skill}</div>
+                    ))}
+                </div>
+            )}
+
+            {Array.isArray(formData.idiomas) && formData.idiomas.length > 0 && (
+                <div className="cv-section-block">
+                    <h3 className="cv-section-title">
+                        <Globe size={18} className="section-icon" />
+                        Idiomas
+                    </h3>
+
+                    {formData.idiomas.map((lang, i) => (
+                        <div key={i} className="cv-item">{lang}</div>
+                    ))}
                 </div>
             )}
         </div>

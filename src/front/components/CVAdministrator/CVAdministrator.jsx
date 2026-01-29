@@ -2,14 +2,13 @@ import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../hooks/UserContextProvier.jsx";
 import CVPreview from "./CVPreview.jsx";
 import CVEditor from "./CVEditor.jsx";
-import { createEmptyCV, cloneCV } from "./utils/cvHelpers.js";
+import { createEmptyCV } from "./utils/cvHelpers.js";
 import "../../styles/CVAdministrator.css";
 import ModalAgregarCV from "./ModalAgregarCV.jsx";
-import { Pencil, Trash2, FileText } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
-
-
-
+import { useRef } from "react";
+import ShareDropdown from "./ShareDropdown";
 
 const CVAdministrator = () => {
     const { token } = useContext(UserContext);
@@ -22,27 +21,8 @@ const CVAdministrator = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [showAgregarModal, setShowAgregarModal] = useState(false);
-
     const [isOpen, setIsOpen] = useState(false);
-
-    const handleToggleCV = () => {
-        setIsOpen(prev => !prev);
-    };
-
-    const handleExportPDF = (id) => {
-        selectCV(id);
-        setIsEditing(false);
-        setIsOpen(true);
-
-        setTimeout(() => {
-            window.print();
-        }, 300);
-    };
-
-
-    useEffect(() => {
-        if (token) loadCVList();
-    }, [token]);
+    const cvRef = useRef();
 
     const normalizeCV = (datos) => ({
         ...datos,
@@ -79,6 +59,10 @@ const CVAdministrator = () => {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (token) loadCVList();
+    }, [token]);
 
     const selectCV = (id) => {
         const cv = cvList.find((c) => c.id === id);
@@ -135,81 +119,42 @@ const CVAdministrator = () => {
         setSaving(false);
     };
 
+    const handleSave = async (cvData) => {
+        setSaving(true);
+
+        const res = await fetch(`${backendUrl}/cv/${selectedCVId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(cvData),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            const actualizado = {
+                id: data.cv.id,
+                datos: normalizeCV(data.cv.datos)
+            };
+
+            setCvList((prev) =>
+                prev.map((cv) => (cv.id === actualizado.id ? actualizado : cv))
+            );
+
+            setFormData(actualizado.datos);
+            setIsEditing(false);
+        }
+
+        setSaving(false);
+    };
 
     const createNewCV = () => {
         const nuevo = createEmptyCV();
         setSelectedCVId(null);
         setFormData(normalizeCV(nuevo.datos));
         setIsEditing(true);
-    };
-
-    const saveCV = async () => {
-        setSaving(true);
-
-        try {
-            if (!selectedCVId) {
-                const res = await fetch(`${backendUrl}/cv`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        ...formData,
-                        created_at: new Date().toISOString()
-                    }),
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    const nuevo = {
-                        id: data.cv.id,
-                        datos: normalizeCV(data.cv.datos)
-                    };
-
-                    setCvList((prev) => [...prev, nuevo]);
-                    setSelectedCVId(nuevo.id);
-                    setFormData(nuevo.datos);
-                    setIsEditing(false);
-                }
-
-                setSaving(false);
-                return;
-            }
-
-            const res = await fetch(`${backendUrl}/cv/${selectedCVId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    created_at: cvList.find((cv) => cv.id === selectedCVId)?.created_at
-                }),
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                const actualizado = {
-                    id: data.cv.id,
-                    datos: normalizeCV(data.cv.datos)
-                };
-
-                setCvList((prev) =>
-                    prev.map((cv) => (cv.id === selectedCVId ? actualizado : cv))
-                );
-
-                setFormData(actualizado.datos);
-                setIsEditing(false);
-            }
-        } catch (err) {
-            console.error("Error al guardar CV:", err);
-        } finally {
-            setSaving(false);
-        }
     };
 
     const deleteCV = async (cvId) => {
@@ -259,12 +204,26 @@ const CVAdministrator = () => {
         setShowAgregarModal(false);
     };
 
+    const handleExportPDF = async (id) => {
+        const cv = cvList.find((c) => c.id === id);
+        if (!cv) return;
+
+        setSelectedCVId(id);
+        setFormData(normalizeCV(cv.datos));
+        setIsEditing(false);
+        setIsOpen(true);
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        window.print();
+
+        setTimeout(() => setIsOpen(false), 1000);
+    };
 
     return (
         <div className="cv-admin-container">
             {showAgregarModal && (
-                <ModalAgregarCV cvList={cvList} onClose={() => setShowAgregarModal(false)}
-                />
+                <ModalAgregarCV cvList={cvList} onClose={() => setShowAgregarModal(false)} />
             )}
 
             <div className="cv-topbar">
@@ -275,11 +234,11 @@ const CVAdministrator = () => {
                 </div>
             </div>
 
-            {!isEditing && (
+            {!isEditing && !isOpen && (
                 <table className="cv-table">
                     <thead>
                         <tr>
-                            <th>Nombre del CV</th>
+                            <th>Descripcion CV</th>
                             <th style={{ width: "160px" }}>Acciones</th>
                         </tr>
                     </thead>
@@ -291,17 +250,23 @@ const CVAdministrator = () => {
 
                                 <td>
                                     <div className="cv-actions-row">
-                                        <button onClick={() => handleEdit(cv.id)}>
+                                        <button
+                                            type="button"
+                                            className="btn-cv-action btn-secondary"
+                                            onClick={() => handleEdit(cv.id)}
+                                        >
                                             <Pencil size={18} />
                                         </button>
 
-                                        <button onClick={() => deleteCV(cv.id)}>
+                                        <button
+                                            type="button"
+                                            className="btn-cv-action btn-danger"
+                                            onClick={() => deleteCV(cv.id)}
+                                        >
                                             <Trash2 size={18} />
                                         </button>
 
-                                        <button onClick={() => handleExportPDF(cv.id)}>
-                                            <FileText size={18} />
-                                        </button>
+                                        <ShareDropdown cv={cv} />
                                     </div>
                                 </td>
                             </tr>
@@ -310,17 +275,7 @@ const CVAdministrator = () => {
                 </table>
             )}
 
-
             <main className="cv-main">
-
-                {formData && (
-                    <div className="cv-inner-actions">
-
-
-
-                    </div>
-                )}
-
                 {isLoading ? (
                     <p>Cargando...</p>
                 ) : isEditing ? (
@@ -329,19 +284,17 @@ const CVAdministrator = () => {
                         updateCurrentCV={updateCurrentCV}
                         setIsEditing={setIsEditing}
                         saving={saving}
-                        onSave={handleSaveAs}
+                        onSave={handleSave}
+                        onSaveAs={handleSaveAs}
                     />
                 ) : formData ? (
-                    isOpen && (
-                        <CVPreview
-                            formData={formData}
-                        />
-                    )
+                    <div className="cv-pdf-container" style={{ display: isOpen ? "block" : "none" }}>
+                        <CVPreview formData={formData} />
+                    </div>
                 ) : (
                     <p>No hay CV seleccionado</p>
                 )}
             </main>
-
         </div>
     );
 };

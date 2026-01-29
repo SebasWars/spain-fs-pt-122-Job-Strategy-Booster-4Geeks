@@ -1,3 +1,4 @@
+from flask import Response
 import requests
 import traceback
 from werkzeug.utils import secure_filename
@@ -16,6 +17,16 @@ import json
 from datetime import datetime
 from api.data_mock.mock_data import jobs
 from datetime import datetime
+from flask import Response, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.colors import HexColor
+from reportlab.lib.utils import ImageReader
+import json
+import base64
+
 
 api = Blueprint('api', __name__)
 
@@ -216,7 +227,6 @@ def create_cv():
         if not data:
             return jsonify({"success": False, "message": "No se enviaron datos"}), 400
 
-        # Crear un nuevo CV
         nuevo_cv = CV(
             user_id=current_user_id,
             datos=json.dumps(data, ensure_ascii=False),
@@ -284,6 +294,212 @@ def delete_cv(cv_id):
     except Exception as e:
         print(f"ERROR: {e}")
         db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+    from flask import Response, jsonify
+
+
+@api.route("/cv/<int:cv_id>/pdf", methods=["GET"])
+@jwt_required()
+def generate_cv_pdf(cv_id):
+    try:
+        current_user_id = get_jwt_identity()
+        cv = CV.query.filter_by(id=cv_id, user_id=current_user_id).first()
+
+        if not cv:
+            return jsonify({"success": False, "message": "CV no encontrado"}), 404
+
+        datos = json.loads(cv.datos)
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+
+        width, height = A4
+        x_margin = 60
+        y = height - 80
+
+        title_color = HexColor("#005A9C")
+        text_color = HexColor("#2E2E2E")
+        muted_color = HexColor("#555555")
+        border_color = HexColor("#CCCCCC")
+
+        p.setStrokeColor(border_color)
+        p.setLineWidth(1)
+        p.rect(x_margin - 20, 50, width - (x_margin - 20)
+               * 2, height - 120, stroke=1, fill=0)
+
+        foto_base64 = datos.get("foto", "")
+        text_x = x_margin
+        text_y = y
+
+        if foto_base64:
+            try:
+                if foto_base64.startswith("data:image"):
+                    foto_base64 = foto_base64.split(",")[1]
+
+                foto_bytes = base64.b64decode(foto_base64)
+                foto_image = ImageReader(BytesIO(foto_bytes))
+                foto_width = 110
+                foto_height = 110
+                foto_x = x_margin
+                foto_y = y
+
+                p.drawImage(
+                    foto_image,
+                    foto_x,
+                    foto_y - foto_height,
+                    foto_width,
+                    foto_height,
+                    preserveAspectRatio=True,
+                    mask='auto'
+                )
+
+                text_x = foto_x + foto_width + 25
+                text_y = foto_y
+
+            except:
+                text_x = x_margin
+                text_y = y
+
+        nombre = datos.get("nombre", "")[:40]
+        p.setFont("Helvetica-Bold", 24)
+        p.setFillColor(title_color)
+        p.drawString(text_x, text_y, nombre)
+        text_y -= 26
+
+        p.setFont("Helvetica", 11)
+        p.setFillColor(muted_color)
+        email = datos.get("email", "")
+        telefono = datos.get("telefono", "")
+        direccion = datos.get("direccion", "")
+
+        if email:
+            p.drawString(text_x, text_y, f"\u2709  {email}")
+            text_y -= 16
+        if telefono:
+            p.drawString(text_x, text_y, f"\u260E  {telefono}")
+            text_y -= 16
+        if direccion:
+            p.drawString(text_x, text_y, f"\u2302  {direccion}")
+            text_y -= 16
+
+        y = min(y - 130, text_y - 40)
+
+        p.setStrokeColor(border_color)
+        p.setLineWidth(0.8)
+        p.line(x_margin - 10, y, width - x_margin + 10, y)
+        y -= 30
+
+        from reportlab.platypus import Paragraph
+        from reportlab.lib.styles import getSampleStyleSheet
+
+        styles = getSampleStyleSheet()
+        style = styles["Normal"]
+        style.fontName = "Helvetica"
+        style.fontSize = 11
+        style.textColor = text_color
+        style.leading = 14
+
+        if "perfil" in datos and datos["perfil"]:
+            p.setFont("Helvetica-Bold", 14)
+            p.setFillColor(title_color)
+            p.drawString(x_margin, y, "PERFIL PROFESIONAL")
+            y -= 22
+
+            para = Paragraph(datos["perfil"], style)
+            w, h = para.wrap(width - 2 * x_margin, height)
+            para.drawOn(p, x_margin, y - h)
+            y -= h + 20
+
+        if "experiencia" in datos and datos["experiencia"]:
+            p.setFont("Helvetica-Bold", 14)
+            p.setFillColor(title_color)
+            p.drawString(x_margin, y, "EXPERIENCIA")
+            y -= 22
+
+            for exp in datos["experiencia"]:
+                puesto = exp.get("puesto", "")
+                empresa = exp.get("empresa", "")
+                descripcion = exp.get("descripcion", "")
+
+                if puesto:
+                    p.setFont("Helvetica-Bold", 11)
+                    p.setFillColor(text_color)
+                    p.drawString(x_margin, y, puesto)
+                    y -= 14
+
+                if empresa:
+                    p.setFont("Helvetica", 11)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, empresa)
+                    y -= 14
+
+                if descripcion:
+                    para = Paragraph(descripcion, style)
+                    w, h = para.wrap(width - 2 * x_margin, height)
+                    para.drawOn(p, x_margin, y - h)
+                    y -= h + 10
+
+                y -= 6
+
+            y -= 10
+
+        if "educacion" in datos and datos["educacion"]:
+            p.setFont("Helvetica-Bold", 14)
+            p.setFillColor(title_color)
+            p.drawString(x_margin, y, "EDUCACIÓN")
+            y -= 22
+
+            for edu in datos["educacion"]:
+                titulo = edu.get("titulo", "")
+                institucion = edu.get("institucion", "")
+
+                if titulo:
+                    p.setFont("Helvetica-Bold", 11)
+                    p.setFillColor(text_color)
+                    p.drawString(x_margin, y, titulo)
+                    y -= 14
+
+                if institucion:
+                    p.setFont("Helvetica", 11)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, institucion)
+                    y -= 18
+
+                y -= 6
+
+            y -= 10
+
+        if "habilidades" in datos and datos["habilidades"]:
+            p.setFont("Helvetica-Bold", 14)
+            p.setFillColor(title_color)
+            p.drawString(x_margin, y, "HABILIDADES")
+            y -= 22
+
+            p.setFont("Helvetica", 11)
+            p.setFillColor(text_color)
+            skills = " · ".join(datos["habilidades"])
+            para = Paragraph(skills, style)
+            w, h = para.wrap(width - 2 * x_margin, height)
+            para.drawOn(p, x_margin, y - h)
+            y -= h + 10
+
+        p.showPage()
+        p.save()
+
+        buffer.seek(0)
+        pdf_content = buffer.getvalue()
+
+        return Response(
+            pdf_content,
+            mimetype="application/pdf",
+            headers={
+                "Content-Disposition": f"inline; filename=cv-{cv_id}.pdf"
+            }
+        )
+
+    except Exception as e:
+        print(f"ERROR: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
 
 
@@ -558,7 +774,7 @@ def profile_get():
     current_user = get_jwt_identity()
     profile = Profile.query.filter_by(user_id=current_user).first()
     if profile is None:
-        return jsonify({"msg": "Profile not found"}), 404
+        return jsonify({"msg": "Profile not created", "profile": None}), 200
     return jsonify(profile.serialize()), 200
 
 
