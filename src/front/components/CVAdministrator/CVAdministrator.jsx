@@ -121,6 +121,9 @@ const CVAdministrator = () => {
 
     const handleSave = async (cvData) => {
         setSaving(true);
+        if (!selectedCVId) {
+            return handleSaveAs(cvData);
+        }
 
         const res = await fetch(`${backendUrl}/cv/${selectedCVId}`, {
             method: "PUT",

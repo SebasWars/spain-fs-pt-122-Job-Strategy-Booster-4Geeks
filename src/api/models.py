@@ -145,4 +145,6 @@ class Stages(db.Model):
             'id': self.id,
             'stage_name': self.stage_name,
             'date_completed_stage': self.date_completed_stage,
-            'stage_completed': self.stage_completed }
+            'stage_completed': self.stage_completed,
+            
+            }

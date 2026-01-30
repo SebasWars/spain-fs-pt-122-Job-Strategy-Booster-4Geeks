@@ -3,6 +3,8 @@ from werkzeug.utils import secure_filename
 import requests
 import openai
 import os
+from difflib import SequenceMatcher
+
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
 from api.models import db, User, CV
@@ -290,6 +292,17 @@ RESOURCES = {
 }
 
 MAX_QUESTIONS = 5
+def similarity(a, b):
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+# Función para determinar nivel según promedio de scores
+def nivel_por_puntaje(avg_score):
+    if avg_score > 0.75:
+        return "Senior"
+    elif avg_score > 0.5:
+        return "Mid-level"
+    else:
+        return "Junior"
 
 @api.route('/chat', methods=["POST"])
 @jwt_required()
@@ -304,11 +317,10 @@ def chat():
                 "state": "WAIT_READY",
                 "role": None,
                 "question_index": 0,
-                "question_order": []
+                "question_order": [],
+                "scores": [] 
             }
-            return jsonify({
-                "response": "👋 ¿Estás listo para una simulación de entrevista? (sí / no)"
-            })
+            return jsonify({"response": "👋 ¿Estás listo para una simulación de entrevista? (sí / no)"})
 
         session = sessions[user_id]
 
@@ -326,13 +338,10 @@ def chat():
                         "5) Preguntas personales"
                     )
                 })
-
-            if user_message.lower() in ["no", "nop", "nope"]:
-                return jsonify({
-                    "response": "👌 Cuando estés listo escribe 'sí'."
-                })
-
-            return jsonify({"response": "Por favor responde 'sí' o 'no'."})
+            elif user_message.lower() in ["no", "nop", "nope"]:
+                return jsonify({"response": "👌 Cuando estés listo escribe 'sí'."})
+            else:
+                return jsonify({"response": "Por favor responde 'sí' o 'no'."})
 
         if session["state"] == "WAIT_ROLE":
             roles = {
@@ -350,6 +359,7 @@ def chat():
             session["role"] = role
             session["state"] = "INTERVIEW"
             session["question_index"] = 0
+            session["scores"] = []
 
             questions = QUESTIONS[role]
             question_order = random.sample(questions, min(MAX_QUESTIONS, len(questions)))
@@ -371,11 +381,16 @@ def chat():
 
             if q_index >= len(question_order):
                 session["state"] = "FINISHED"
+                avg_score = sum(session["scores"]) / len(session["scores"]) if session["scores"] else 0
+                nivel = nivel_por_puntaje(avg_score)
+
                 resources_list = RESOURCES.get(role, [])
                 resources_text = "\n".join(f"- {r}" for r in resources_list)
                 return jsonify({
                     "response": (
-                        "✅ ¡Buen trabajo!\n\n"
+                        f"✅ ¡Buen trabajo!\n"
+                        f"Nivel aproximado: {nivel}\n"
+                        f"Puntaje promedio: {avg_score:.2f}\n\n"
                         f"📚 Recursos recomendados para seguir entrenando:\n{resources_text}\n\n"
                         "¿Quieres otra simulación? (sí / no)"
                     )
@@ -388,26 +403,45 @@ def chat():
                 if not answer:
                     return jsonify({"response": "No hay respuestas ejemplo para esta pregunta."})
                 return jsonify({
-                    "response": f"\nRespuesta ejemplo:\n{answer}\n\n"
+                    "response": f"📌 Respuesta ejemplo:\n{answer}\n\nAhora responde con tus propias palabras 🙂"
                 })
 
-            feedback = "De nada,ahora te muestro suigente pregunta"
+            example_answer = ANSWERS.get(role, {}).get(current_question)
+            feedback = "Gracias por tu respuesta 👍"
+            score = 0.0
 
-            q_index += 1
-            session["question_index"] = q_index
+            if example_answer:
+                score = similarity(user_message, example_answer)
+                session["scores"].append(score)
 
-            if q_index < len(question_order):
-                next_question = question_order[q_index]
+                if score > 0.75:
+                    feedback = "🔥 ¡Muy bien! Tu respuesta es muy cercana a la ideal."
+                elif score > 0.5:
+                    feedback = "👍 Vas por buen camino, la idea principal está correcta."
+                else:
+                    feedback = "👌 Bien, aunque podrías profundizar un poco más."
+            else:
+                session["scores"].append(score)
+
+            session["question_index"] += 1
+
+            if session["question_index"] < len(question_order):
+                next_question = question_order[session["question_index"]]
                 return jsonify({
-                    "response": f"{feedback}\n\nPregunta {q_index + 1}:\n{next_question}\n\nEscribe tu respuesta o 'show' para ver una respuesta ejemplo."
+                    "response": f"{feedback}\n\nPregunta {session['question_index'] + 1}:\n{next_question}\n\nEscribe tu respuesta o 'show' para ver una respuesta ejemplo."
                 })
             else:
                 session["state"] = "FINISHED"
+                avg_score = sum(session["scores"]) / len(session["scores"]) if session["scores"] else 0
+                nivel = nivel_por_puntaje(avg_score)
                 resources_list = RESOURCES.get(role, [])
                 resources_text = "\n".join(f"- {r}" for r in resources_list)
+
                 return jsonify({
                     "response": (
-                        f"{feedback}\n\n✅ ¡Buen trabajo!\n\n"
+                        f"{feedback}\n\n✅ ¡Buen trabajo!\n"
+                        f"Nivel aproximado: {nivel}\n"
+                        f"Puntaje promedio: {avg_score:.2f}\n\n"
                         f"📚 Recursos recomendados para seguir entrenando:\n{resources_text}\n\n"
                         "¿Quieres otra simulación? (sí / no)"
                     )
@@ -418,14 +452,14 @@ def chat():
                 session["state"] = "WAIT_ROLE"
                 session["question_index"] = 0
                 session["question_order"] = []
+                session["scores"] = []
                 return jsonify({"response": "Perfecto 👍 Elige nuevamente una opción (1-5)."})
-
-            return jsonify({"response": "👋 Gracias por practicar. ¡Éxitos!"})
+            else:
+                return jsonify({"response": "👋 Gracias por practicar. ¡Éxitos!"})
 
     except Exception as e:
         traceback.print_exc()
         return jsonify({"response": f"Error: {str(e)}"}), 500
-
 def clean_company_name(line: str, max_length=50) -> str:
     line = re.sub(r"http\S+", "", line)
     line = re.sub(r"\d+", "", line)
@@ -782,7 +816,6 @@ def delete_cv(cv_id):
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
 
-    from flask import Response, jsonify
 
 
 @api.route("/cv/<int:cv_id>/pdf", methods=["GET"])
@@ -1159,50 +1192,22 @@ def status_count():
     return jsonify({"postulation": postulacion})
 
 
-@api.route("/postulacion/abierta", methods=["GET"])
-@jwt_required()
-def status_abierta_get():
-    current_user = get_jwt_identity()
-    postulacion = Postulations.query.filter_by(
-        user_id=current_user, postulation_state="abierta").count()
-    return jsonify({"abierta": postulacion})
-
-
-@api.route("/postulacion/en_proceso", methods=["GET"])
-@jwt_required()
-def status_en_proceso_get():
-    current_user = get_jwt_identity()
-    postulacion = Postulations.query.filter_by(
-        user_id=current_user, postulation_state="en proceso").count()
-    return jsonify({"en_proceso": postulacion})
-
-
-@api.route("/postulacion/entrevista", methods=["GET"])
+@api.route("/status", methods=["GET"])
 def status_entrevista_get():
-    postulacion = Stages.query.filter_by( stage_name="hr_interview").count()
-    return jsonify({"entrevista": postulacion})
+    entrevista = Stages.query.filter_by( stage_name="hr_interview").count()
+    offer = Stages.query.filter_by(stage_name="offer").count()
+    process_closure = Stages.query.filter_by( stage_name="process_closure").count()
+    aceptada = Postulations.query.filter_by( postulation_state="aceptada").count()
+    return jsonify({"entrevista": entrevista,
+                    "offer":offer,
+                    "descartado": process_closure,
+                    "aceptada": aceptada
+                    })
 
 
-@api.route("/postulacion/oferta", methods=["GET"])
-def status_oferta_get():
-    postulacion = Stages.query.filter_by(
-         stage_name="offer").count()
-    return jsonify({"oferta": postulacion})
 
 
-@api.route("/postulacion/descartado", methods=["GET"])
-def status_descartado_get():
-    postulacion = Stages.query.filter_by( stage_name="process_closure").count()
-    return jsonify({"descartado": postulacion})
 
-
-@api.route("/postulacion/aceptada", methods=["GET"])
-@jwt_required()
-def status_aceptada_get():
-    current_user = get_jwt_identity()
-    postulacion = Postulations.query.filter_by(
-        user_id=current_user, postulation_state="aceptada").count()
-    return jsonify({"aceptada": postulacion})
 
 
 @api.route("/profile", methods=["GET"])

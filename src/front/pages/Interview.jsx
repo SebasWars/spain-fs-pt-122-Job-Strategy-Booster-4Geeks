@@ -9,12 +9,11 @@ function Interview() {
     const [loading, setLoading] = useState(false);
 
     const backendUrl =
-        import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+        import.meta.env.VITE_BACKEND_URL;
 
     const chatEndRef = useRef(null);
     const { token } = useContext(UserContext);
 
-    // Helper function to convert URLs in text into clickable links
     function linkify(text) {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         const parts = text.split(urlRegex);
