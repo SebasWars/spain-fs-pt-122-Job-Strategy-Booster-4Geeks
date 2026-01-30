@@ -161,10 +161,20 @@ const CVAdministrator = () => {
         if (!confirm("¿Seguro que deseas eliminar este CV?")) return;
 
         try {
-            await fetch(`${backendUrl}/cv/${cvId}`, {
+            const res = await fetch(`${backendUrl}/cv/${cvId}`, {
                 method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
             });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                alert(data.message || "No se pudo eliminar el CV");
+                return;
+            }
 
             const updatedList = cvList.filter((cv) => cv.id !== cvId);
             setCvList(updatedList);
@@ -180,6 +190,7 @@ const CVAdministrator = () => {
             console.error("Error al eliminar CV:", err);
         }
     };
+
 
     const handleView = (id) => {
         selectCV(id);

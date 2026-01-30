@@ -52,7 +52,7 @@ const Sidebar = ({
 
                     <button
                         className="btn btn-danger btn-full"
-                        onClick={deleteCV}
+                        onClick={() => deleteCV(selectedCV.id)}
                     >
                         <Trash2 size={16} /> Eliminar
                     </button>

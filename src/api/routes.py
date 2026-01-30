@@ -311,6 +311,31 @@ def generate_cv_pdf(cv_id):
 
         datos = json.loads(cv.datos)
 
+        def normalizar_periodos(lista):
+            for item in lista:
+                periodo = item.get("periodo", "")
+                if periodo:
+                    partes = periodo.replace("–", "-").split("-")
+                    if len(partes) == 2:
+                        item["inicio"] = partes[0].strip()
+                        item["fin"] = partes[1].strip()
+                    else:
+                        item["inicio"] = periodo
+                        item["fin"] = ""
+                item.setdefault("inicio", "")
+                item.setdefault("fin", "")
+
+        datos.setdefault("perfil", datos.get("resumen", ""))
+        datos.setdefault("habilidades", [])
+        datos.setdefault("experiencia", [])
+        datos.setdefault("educacion", [])
+        datos.setdefault("ubicacion", "")
+        datos.setdefault("linkedin", "")
+        datos.setdefault("github", "")
+
+        normalizar_periodos(datos["experiencia"])
+        normalizar_periodos(datos["educacion"])
+
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
 
@@ -336,57 +361,57 @@ def generate_cv_pdf(cv_id):
             try:
                 if foto_base64.startswith("data:image"):
                     foto_base64 = foto_base64.split(",")[1]
-
                 foto_bytes = base64.b64decode(foto_base64)
                 foto_image = ImageReader(BytesIO(foto_bytes))
                 foto_width = 110
                 foto_height = 110
                 foto_x = x_margin
                 foto_y = y
-
-                p.drawImage(
-                    foto_image,
-                    foto_x,
-                    foto_y - foto_height,
-                    foto_width,
-                    foto_height,
-                    preserveAspectRatio=True,
-                    mask='auto'
-                )
-
+                p.drawImage(foto_image, foto_x, foto_y - foto_height, foto_width,
+                            foto_height, preserveAspectRatio=True, mask='auto')
                 text_x = foto_x + foto_width + 25
                 text_y = foto_y
-
             except:
                 text_x = x_margin
                 text_y = y
 
-        nombre = datos.get("nombre", "")[:40]
-        p.setFont("Helvetica-Bold", 24)
+        nombre = datos.get("nombre", "")[:60]
+        font_size = 22
+        max_nombre_width = width - text_x - x_margin
+        while p.stringWidth(nombre, "Helvetica-Bold", font_size) > max_nombre_width and font_size > 12:
+            font_size -= 1
+
+        p.setFont("Helvetica-Bold", font_size)
         p.setFillColor(title_color)
         p.drawString(text_x, text_y, nombre)
-        text_y -= 26
+        text_y -= font_size + 4
 
         p.setFont("Helvetica", 11)
         p.setFillColor(muted_color)
-        email = datos.get("email", "")
-        telefono = datos.get("telefono", "")
-        direccion = datos.get("direccion", "")
 
-        if email:
-            p.drawString(text_x, text_y, f"\u2709  {email}")
+        if datos.get("email"):
+            p.drawString(text_x, text_y, f"Email: {datos['email']}")
             text_y -= 16
-        if telefono:
-            p.drawString(text_x, text_y, f"\u260E  {telefono}")
+        if datos.get("telefono"):
+            p.drawString(text_x, text_y, f"Teléfono: {datos['telefono']}")
             text_y -= 16
-        if direccion:
-            p.drawString(text_x, text_y, f"\u2302  {direccion}")
+        if datos.get("direccion"):
+            p.drawString(text_x, text_y, f"Dirección: {datos['direccion']}")
+            text_y -= 16
+        if datos.get("ubicacion"):
+            p.drawString(text_x, text_y, f"Ubicación: {datos['ubicacion']}")
+            text_y -= 16
+        if datos.get("linkedin"):
+            p.drawString(text_x, text_y, f"LinkedIn: {datos['linkedin']}")
+            text_y -= 16
+        if datos.get("github"):
+            p.drawString(text_x, text_y, f"GitHub: {datos['github']}")
             text_y -= 16
 
         y = min(y - 130, text_y - 40)
 
         p.setStrokeColor(border_color)
-        p.setLineWidth(0.8)
+        p.setLineWidth(0.5)
         p.line(x_margin - 10, y, width - x_margin + 10, y)
         y -= 30
 
@@ -400,84 +425,75 @@ def generate_cv_pdf(cv_id):
         style.textColor = text_color
         style.leading = 14
 
-        if "perfil" in datos and datos["perfil"]:
-            p.setFont("Helvetica-Bold", 14)
+        def seccion(titulo):
+            nonlocal y
+            p.setFont("Helvetica-Bold", 13)
             p.setFillColor(title_color)
-            p.drawString(x_margin, y, "PERFIL PROFESIONAL")
-            y -= 22
+            p.drawString(x_margin, y, titulo.upper())
+            y -= 8
+            p.setStrokeColor(border_color)
+            p.setLineWidth(0.3)
+            p.line(x_margin, y, width - x_margin, y)
+            y -= 20
 
+        if datos["perfil"]:
+            seccion("Perfil profesional")
             para = Paragraph(datos["perfil"], style)
             w, h = para.wrap(width - 2 * x_margin, height)
             para.drawOn(p, x_margin, y - h)
             y -= h + 20
 
-        if "experiencia" in datos and datos["experiencia"]:
-            p.setFont("Helvetica-Bold", 14)
-            p.setFillColor(title_color)
-            p.drawString(x_margin, y, "EXPERIENCIA")
-            y -= 22
-
+        if datos["experiencia"]:
+            seccion("Experiencia")
             for exp in datos["experiencia"]:
-                puesto = exp.get("puesto", "")
-                empresa = exp.get("empresa", "")
-                descripcion = exp.get("descripcion", "")
-
-                if puesto:
+                if exp.get("puesto"):
                     p.setFont("Helvetica-Bold", 11)
                     p.setFillColor(text_color)
-                    p.drawString(x_margin, y, puesto)
+                    p.drawString(x_margin, y, exp["puesto"])
                     y -= 14
-
-                if empresa:
+                if exp.get("empresa"):
                     p.setFont("Helvetica", 11)
                     p.setFillColor(muted_color)
-                    p.drawString(x_margin, y, empresa)
+                    p.drawString(x_margin, y, exp["empresa"])
                     y -= 14
-
-                if descripcion:
-                    para = Paragraph(descripcion, style)
+                periodo = f"{exp['inicio']} – {exp['fin']}".strip(" –")
+                if periodo:
+                    p.setFont("Helvetica-Oblique", 10)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, periodo)
+                    y -= 12
+                if exp.get("descripcion"):
+                    para = Paragraph(exp["descripcion"], style)
                     w, h = para.wrap(width - 2 * x_margin, height)
                     para.drawOn(p, x_margin, y - h)
                     y -= h + 10
-
                 y -= 6
-
             y -= 10
 
-        if "educacion" in datos and datos["educacion"]:
-            p.setFont("Helvetica-Bold", 14)
-            p.setFillColor(title_color)
-            p.drawString(x_margin, y, "EDUCACIÓN")
-            y -= 22
-
+        if datos["educacion"]:
+            seccion("Educación")
             for edu in datos["educacion"]:
-                titulo = edu.get("titulo", "")
-                institucion = edu.get("institucion", "")
-
-                if titulo:
+                if edu.get("titulo"):
                     p.setFont("Helvetica-Bold", 11)
                     p.setFillColor(text_color)
-                    p.drawString(x_margin, y, titulo)
+                    p.drawString(x_margin, y, edu["titulo"])
                     y -= 14
-
-                if institucion:
+                if edu.get("institucion"):
                     p.setFont("Helvetica", 11)
                     p.setFillColor(muted_color)
-                    p.drawString(x_margin, y, institucion)
-                    y -= 18
-
+                    p.drawString(x_margin, y, edu["institucion"])
+                    y -= 14
+                periodo = f"{edu['inicio']} – {edu['fin']}".strip(" –")
+                if periodo:
+                    p.setFont("Helvetica-Oblique", 10)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, periodo)
+                    y -= 12
                 y -= 6
-
             y -= 10
 
-        if "habilidades" in datos and datos["habilidades"]:
-            p.setFont("Helvetica-Bold", 14)
-            p.setFillColor(title_color)
-            p.drawString(x_margin, y, "HABILIDADES")
-            y -= 22
-
-            p.setFont("Helvetica", 11)
-            p.setFillColor(text_color)
+        if datos["habilidades"]:
+            seccion("Habilidades")
             skills = " · ".join(datos["habilidades"])
             para = Paragraph(skills, style)
             w, h = para.wrap(width - 2 * x_margin, height)
@@ -490,13 +506,7 @@ def generate_cv_pdf(cv_id):
         buffer.seek(0)
         pdf_content = buffer.getvalue()
 
-        return Response(
-            pdf_content,
-            mimetype="application/pdf",
-            headers={
-                "Content-Disposition": f"inline; filename=cv-{cv_id}.pdf"
-            }
-        )
+        return Response(pdf_content, mimetype="application/pdf", headers={"Content-Disposition": f"inline; filename=cv-{cv_id}.pdf"})
 
     except Exception as e:
         print(f"ERROR: {e}")
