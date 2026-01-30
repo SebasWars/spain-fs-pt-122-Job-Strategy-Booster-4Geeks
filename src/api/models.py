@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean, ForeignKey, Integer, Float, JSON, DateTime, Date
+from sqlalchemy import String, Boolean, ForeignKey, Integer, Float, JSON, DateTime, Date,Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from datetime import datetime,date
@@ -68,10 +68,12 @@ class Postulations(db.Model):
     platform: Mapped[str] = mapped_column(String(100), nullable=False)
     postulation_url: Mapped[str] = mapped_column(String(2000), nullable=False)
     work_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    requirements: Mapped[List[str]] = mapped_column(JSON, nullable=False)    
+
+    requirements: Mapped[List[str]] = mapped_column(JSON, nullable=False,default=[])    
+    
     candidates_applied: Mapped[int] = mapped_column(Integer, nullable=False)
     available_positions: Mapped[int] = mapped_column(Integer, nullable=False)
-    job_description: Mapped[str] = mapped_column(String(500), nullable=False)
+    job_description: Mapped[str] = mapped_column(Text, nullable=False)
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     user: Mapped["User"] = relationship("User", back_populates="postulations")
@@ -96,7 +98,8 @@ class Postulations(db.Model):
         "job_description": self.job_description,
         "stages": [stage.serialize() for stage in self.stages]
     }
-
+    def __str__(self):
+        return self.user.username if self.user else f"User ID {self.user_id}"
 
 class Profile(db.Model):
         id: Mapped[int] = mapped_column(primary_key=True)
