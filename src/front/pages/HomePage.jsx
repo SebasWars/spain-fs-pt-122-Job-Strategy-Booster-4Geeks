@@ -11,6 +11,7 @@ import useGetAuthorizationHeader from "../hooks/useGetAuthorizationHeader";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { UserContext } from "../hooks/UserContextProvier";
+import { Todo } from "../components/home/TodoConponents.jsx/Todo";
 
 
 function HomePage() {
@@ -19,9 +20,8 @@ function HomePage() {
 
 	const [postulation, setPostulation] = useState([])
 	const authorizationHeader = useGetAuthorizationHeader();
-	const [oferta, setOferta] = useState(0)
-	const [entrevista, setEntrevista] = useState(0)
-	const [descartado, setDescartado] = useState(0)
+	const [status, setStatus] = useState(0)
+
 
 
 
@@ -40,22 +40,11 @@ function HomePage() {
 		{ name: "Descartado", value: applicationStatistics('descartado'), color: "#e44441ff" }
 	];
 	useEffect(() => {
-		axios.get(`${backendUrl}/postulacion/entrevista`).then((res) => { setEntrevista(res.data) }).catch((err) => {
+		axios.get(`${backendUrl}/status`).then((res) => { setStatus(res.data) }).catch((err) => {
 			console.error(err);
 		})
 	}, [])
 
-	useEffect(() => {
-		axios.get(`${backendUrl}/postulacion/oferta`).then((res) => { setOferta(res.data) }).catch((err) => {
-			console.error(err);
-		})
-	}, [])
-
-	useEffect(() => {
-		axios.get(`${backendUrl}/postulacion/descartado`).then((res) => { setDescartado(res.data) }).catch((err) => {
-			console.error(err);
-		})
-	}, [])
 
 	useEffect(() => {
 		axios.get(`${backendUrl}/postulacion/count`, {
@@ -69,10 +58,6 @@ function HomePage() {
 		})
 	}, [])
 
-
-
-
-
 	useEffect(() => {
 		const fetchPostulations = async () => {
 			const result = await getPostulations(authorizationHeader);
@@ -85,9 +70,9 @@ function HomePage() {
 		<div className="home_display">
 			<div className="statistics_container">
 				<HomeStatisticsCard title={'Postulaciones'} quantity={post.postulation} date={'12/01/2026'} icon={faSuitcase} />
-				<HomeStatisticsCard title={'Entrevistas'} quantity={entrevista.entrevista} date={'12/01/2026'} icon={faUserTie} />
-				<HomeStatisticsCard title={'Ofertas'} quantity={oferta.oferta} date={'12/01/2026'} icon={faEnvelopesBulk} />
-				<HomeStatisticsCard title={'Descartado'} quantity={descartado.descartado} date={'12/01/2026'} icon={faCircleXmark} />
+				<HomeStatisticsCard title={'Entrevistas'} quantity={status.entrevista} date={'12/01/2026'} icon={faUserTie} />
+				<HomeStatisticsCard title={'Ofertas'} quantity={status.offer} date={'12/01/2026'} icon={faEnvelopesBulk} />
+				<HomeStatisticsCard title={'Descartado'} quantity={status.descartado} date={'12/01/2026'} icon={faCircleXmark} />
 			</div>
 			<div className="grafica">
 				<div className="title">
@@ -99,7 +84,9 @@ function HomePage() {
 			<div className="calendar">
 				<Calendar />
 			</div>
-			<div className="todo_list">hola</div>
+			<div className="todo_list">
+				<Todo />
+			</div>
 		</div>
 	);
 }

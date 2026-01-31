@@ -1,13 +1,16 @@
+import re
 import traceback
 from werkzeug.utils import secure_filename
 import requests
 import openai
 import os
+from difflib import SequenceMatcher
+
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
 from api.models import db, User, CV
 from flask import Flask, request, jsonify, url_for, Blueprint, send_from_directory
-from api.models import db, User, Postulations, Profile, Stages
+from api.models import db, User, Postulations, Profile, Stages, TodoList
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -15,16 +18,16 @@ import json
 from datetime import datetime
 from api.data_mock.mock_data import jobs
 
-from datetime import datetime,date
+from datetime import datetime, date
 import pytesseract
 from PIL import Image
 
 api = Blueprint('api', __name__)
 from dotenv import load_dotenv
 import os
-import traceback 
+import traceback
 import openai
-import requests  
+import requests
 from werkzeug.utils import secure_filename
 import re
 import random
@@ -36,9 +39,9 @@ bcrypt = Bcrypt()
 load_dotenv()
 api_key = ("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")
 bcrypt = Bcrypt()
-load_dotenv()  
+load_dotenv()
 api_key = ("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")
-bcrypt = Bcrypt() 
+bcrypt = Bcrypt()
 
 
 openai.api_key = api_key
@@ -46,6 +49,7 @@ GOOGLE_API_KEY = "AIzaSyC-8znGPyiPtg52au8Qm8m1NQehlPLS_uI"
 
 sessions = {}
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
 
 @api.route('/translate', methods=['POST'])
 def translate():
@@ -120,8 +124,7 @@ QUESTIONS = {
         "¿Qué es la inyección de dependencias?",
         "¿Qué es un componente y cómo se comunica con otros?",
         "¿Cómo manejas el enrutamiento en Angular?"
-    ]
-    ,"personal": [
+    ], "personal": [
         "¿Dónde te ves en cinco años?",
         "¿Cuál es tu mayor fortaleza y debilidad?",
         "¿Cómo manejas el estrés o la presión en el trabajo?",
@@ -288,53 +291,79 @@ RESOURCES = {
         "https://rxjs.dev",
     ],
 }
-
 MAX_QUESTIONS = 5
+sessions = {}
 
-@api.route('/chat', methods=["POST"])
+
+def similarity(a, b):
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+def nivel_por_puntaje(avg_score):
+    if avg_score >= 0.75:
+        return "Senior"
+    elif avg_score >= 0.5:
+        return "Intermedio"
+    else:
+        return "Junior"
+
+def clean_company_name(line: str, max_length=50) -> str:
+    line = re.sub(r"http\S+", "", line)
+    line = re.sub(r"\d+", "", line)
+    line = re.sub(r"[^\w\s.,-]", "", line)
+    line = line.strip()
+    return line[:max_length]
+  
+@api.route("/chat", methods=["POST"])
 @jwt_required()
 def chat():
     try:
         user_id = get_jwt_identity()
-        data = request.json or {}
-        user_message = data.get("message", "").strip()
+        user_message = (request.json or {}).get("message", "").strip()
+
 
         if user_id not in sessions:
             sessions[user_id] = {
-                "state": "WAIT_READY",
+                "state": "SALUDO_INICIAL",
                 "role": None,
                 "question_index": 0,
-                "question_order": []
+                "question_order": [],
+                "scores": []
             }
             return jsonify({
-                "response": "👋 ¿Estás listo para una simulación de entrevista? (sí / no)"
+                "response": "Hola, ¿cómo puedo ayudarte?"
             })
 
         session = sessions[user_id]
 
-        if session["state"] == "WAIT_READY":
-            if user_message.lower() in ["si", "sí", "yes"]:
-                session["state"] = "WAIT_ROLE"
+
+        if session["state"] == "SALUDO_INICIAL":
+
+            session["state"] = "ESPERANDO_LISTO"
+            return jsonify({
+                "response": "¿Estás listo para una simulación de entrevista? (sí / no)"
+            })
+
+
+        if session["state"] == "ESPERANDO_LISTO":
+            if user_message.lower() in ["sí", "si", "s"]:
+                session["state"] = "ESPERANDO_ROL"
                 return jsonify({
                     "response": (
-                        "Perfecto 🚀\n"
                         "Elige el tipo de entrevista:\n"
-                        "1) Frontend (FE)\n"
-                        "2) Backend (BE)\n"
+                        "1) Frontend\n"
+                        "2) Backend\n"
                         "3) React\n"
                         "4) Angular\n"
-                        "5) Preguntas personales"
+                        "5) Personal"
                     )
                 })
+            elif user_message.lower() in ["no", "n"]:
+                return jsonify({"response": "Cuando estés listo, dime 'sí' para comenzar."})
+            else:
+                return jsonify({"response": "Por favor responde con 'sí' o 'no'."})
 
-            if user_message.lower() in ["no", "nop", "nope"]:
-                return jsonify({
-                    "response": "👌 Cuando estés listo escribe 'sí'."
-                })
 
-            return jsonify({"response": "Por favor responde 'sí' o 'no'."})
-
-        if session["state"] == "WAIT_ROLE":
+        if session["state"] == "ESPERANDO_ROL":
             roles = {
                 "1": "frontend",
                 "2": "backend",
@@ -344,94 +373,168 @@ def chat():
             }
 
             if user_message not in roles:
-                return jsonify({"response": "Selecciona una opción válida (1-5)."})
+                return jsonify({"response": "Por favor elige una opción válida (1–5)."})
 
             role = roles[user_message]
             session["role"] = role
-            session["state"] = "INTERVIEW"
+            session["state"] = "ENTREVISTA"
             session["question_index"] = 0
+            session["scores"] = []
 
-            questions = QUESTIONS[role]
-            question_order = random.sample(questions, min(MAX_QUESTIONS, len(questions)))
-            session["question_order"] = question_order
+            preguntas = QUESTIONS[role]
+            session["question_order"] = random.sample(
+                preguntas, min(MAX_QUESTIONS, len(preguntas))
+            )
 
-            first_question = question_order[0]
             return jsonify({
-                "response": (
-                    f"🎯 Entrevista {role.upper()} iniciada.\n\n"
-                    f"Pregunta 1:\n{first_question}\n\n"
-                    "Escribe tu respuesta o escribe 'show' para ver una respuesta ejemplo."
-                )
+                "response": f"Pregunta 1:\n{session['question_order'][0]}"
             })
 
-        if session["state"] == "INTERVIEW":
+
+        if session["state"] == "ENTREVISTA":
             role = session["role"]
             q_index = session["question_index"]
             question_order = session["question_order"]
 
-            if q_index >= len(question_order):
-                session["state"] = "FINISHED"
-                resources_list = RESOURCES.get(role, [])
-                resources_text = "\n".join(f"- {r}" for r in resources_list)
-                return jsonify({
-                    "response": (
-                        "✅ ¡Buen trabajo!\n\n"
-                        f"📚 Recursos recomendados para seguir entrenando:\n{resources_text}\n\n"
-                        "¿Quieres otra simulación? (sí / no)"
-                    )
-                })
-
             current_question = question_order[q_index]
+            ejemplo_respuesta = ANSWERS.get(role, {}).get(current_question)
 
-            if user_message.lower() == "show":
-                answer = ANSWERS.get(role, {}).get(current_question)
-                if not answer:
-                    return jsonify({"response": "No hay respuestas ejemplo para esta pregunta."})
-                return jsonify({
-                    "response": f"\nRespuesta ejemplo:\n{answer}\n\n"
-                })
+            score = 0.0
 
-            feedback = "De nada,ahora te muestro suigente pregunta"
+            if ejemplo_respuesta:
+                score = similarity(user_message, ejemplo_respuesta)
+                session["scores"].append(score)
 
-            q_index += 1
-            session["question_index"] = q_index
-
-            if q_index < len(question_order):
-                next_question = question_order[q_index]
-                return jsonify({
-                    "response": f"{feedback}\n\nPregunta {q_index + 1}:\n{next_question}\n\nEscribe tu respuesta o 'show' para ver una respuesta ejemplo."
-                })
+                if score >= 0.75:
+                    feedback = "Buena respuesta."
+                elif score >= 0.5:
+                    feedback = "Necesitas estudiar un poco más esto."
+                else:
+                    feedback = "Respuesta insuficiente."
             else:
-                session["state"] = "FINISHED"
-                resources_list = RESOURCES.get(role, [])
-                resources_text = "\n".join(f"- {r}" for r in resources_list)
-                return jsonify({
-                    "response": (
-                        f"{feedback}\n\n✅ ¡Buen trabajo!\n\n"
-                        f"📚 Recursos recomendados para seguir entrenando:\n{resources_text}\n\n"
-                        "¿Quieres otra simulación? (sí / no)"
-                    )
-                })
+                session["scores"].append(0)
+                feedback = "Respuesta recibida."
 
-        if session["state"] == "FINISHED":
-            if user_message.lower() in ["si", "sí", "yes"]:
-                session["state"] = "WAIT_ROLE"
+            session["question_index"] += 1
+
+            if session["question_index"] >= len(session["question_order"]):
+                session["state"] = "FINALIZADO"
+
+                avg_score = (
+                    sum(session["scores"]) / len(session["scores"])
+                    if session["scores"] else 0
+                )
+                nivel = nivel_por_puntaje(avg_score)
+                resources = RESOURCES.get(role, [])
+                recursos_texto = "\n".join(f"- {r}" for r in resources)
+
+                session["state"] = "ESPERANDO_LISTO"
                 session["question_index"] = 0
                 session["question_order"] = []
-                return jsonify({"response": "Perfecto 👍 Elige nuevamente una opción (1-5)."})
+                session["scores"] = []
 
-            return jsonify({"response": "👋 Gracias por practicar. ¡Éxitos!"})
+                return jsonify({
+                    "response": (
+                        f"{feedback}\n\n"
+                        "Has completado la entrevista.\n\n"
+                        f"Nivel: {nivel}\n"
+                        f"Puntaje promedio: {avg_score:.2f}\n\n"
+                        f"Recursos recomendados:\n{recursos_texto}\n\n"
+                        "¿Quieres iniciar otra entrevista? (sí / no)"
+                    )
+                })
+
+            session["state"] = "PREGUNTAR_SIGUIENTE"
+
+            return jsonify({
+                "response": (
+                    f"{feedback}\n\n"
+                    "¿Qué quieres hacer ahora?\n"
+                    "1) Siguiente pregunta\n"
+                    "2) Salir y ver recursos"
+                )
+            })
+
+
+        if session["state"] == "PREGUNTAR_SIGUIENTE":
+            if user_message == "1":
+                if session["question_index"] < len(session["question_order"]):
+                    siguiente_pregunta = session["question_order"][session["question_index"]]
+                    session["state"] = "ENTREVISTA"
+                    return jsonify({
+                        "response": f"Siguiente pregunta:\n{siguiente_pregunta}"
+                    })
+                else:
+                    session["state"] = "FINALIZADO"
+
+                    avg_score = (
+                        sum(session["scores"]) / len(session["scores"])
+                        if session["scores"] else 0
+                    )
+                    nivel = nivel_por_puntaje(avg_score)
+                    resources = RESOURCES.get(session["role"], [])
+                    recursos_texto = "\n".join(f"- {r}" for r in resources)
+
+                    session["state"] = "ESPERANDO_LISTO"
+                    session["question_index"] = 0
+                    session["question_order"] = []
+                    session["scores"] = []
+
+                    return jsonify({
+                        "response": (
+                            "Has completado la entrevista.\n\n"
+                            f"Nivel: {nivel}\n"
+                            f"Puntaje promedio: {avg_score:.2f}\n\n"
+                            f"Recursos recomendados:\n{recursos_texto}\n\n"
+                            "¿Quieres iniciar otra entrevista? (sí / no)"
+                        )
+                    })
+
+            elif user_message == "2":
+                session["state"] = "FINALIZADO"
+
+                avg_score = (
+                    sum(session["scores"]) / len(session["scores"])
+                    if session["scores"] else 0
+                )
+                nivel = nivel_por_puntaje(avg_score)
+                resources = RESOURCES.get(session["role"], [])
+                recursos_texto = "\n".join(f"- {r}" for r in resources)
+
+                session["state"] = "ESPERANDO_LISTO"
+                session["question_index"] = 0
+                session["question_order"] = []
+                session["scores"] = []
+
+                return jsonify({
+                    "response": (
+                        "Has finalizado la entrevista.\n\n"
+                        f"Nivel: {nivel}\n"
+                        f"Puntaje promedio: {avg_score:.2f}\n\n"
+                        f"Recursos recomendados:\n{recursos_texto}\n\n"
+                        "¿Quieres iniciar otra entrevista? (sí / no)"
+                    )
+                })
+
+            else:
+                return jsonify({
+                    "response": (
+                        "Por favor elige:\n"
+                        "1) Siguiente pregunta\n"
+                        "2) Salir y ver recursos"
+                    )
+                })
+
+
+        session["state"] = "ESPERANDO_LISTO"
+        return jsonify({
+            "response": "¿Quieres iniciar una entrevista? (sí / no)"
+        })
 
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"response": f"Error: {str(e)}"}), 500
+        return jsonify({"response": f"Error del servidor: {str(e)}"}), 500
 
-def clean_company_name(line: str, max_length=50) -> str:
-    line = re.sub(r"http\S+", "", line)
-    line = re.sub(r"\d+", "", line)
-    line = re.sub(r"[^\w\s.,-]", "", line)
-    line = line.strip()
-    return line[:max_length]
 
 
 def extract_postulation_fields(text: str) -> dict:
@@ -481,10 +584,15 @@ def extract_postulation_fields(text: str) -> dict:
     if not data["company_name"] and lines:
         data["company_name"] = clean_company_name(lines[0])
 
-    if not data["role"] and len(lines) > 1:
-        data["role"] = lines[1].strip()
+    if not data["role"]:
+        for line in lines:
+            if any(k in line.lower() for k in ["limpieza", "personal", "operario"]):
+                data["role"] = line.strip()
+                break
 
-    # ---------------- CITY ----------------
+    if not data["role"] and len(lines) > 1:
+        data["role"] = lines[1]
+
     city_match = re.search(r"municipio:\s*([a-záéíóúñ]+)", full_text)
     if city_match:
         data["city"] = city_match.group(1).title()
@@ -494,6 +602,12 @@ def extract_postulation_fields(text: str) -> dict:
                 data["city"] = city.title()
                 break
 
+    if "linkedin" in full_text:
+        data["platform"] = "Linkedin"
+    elif "sefcarm" in full_text or "sefoficinavirtual" in full_text:
+        data["platform"] = "Sefcarm"
+
+    if "presencial" in full_text or "on-site" in full_text:
     # ---------------- WORK TYPE ----------------
     if any(k in full_text for k in ["presencial", "on-site", "lunes a viernes"]):
         data["work_type"] = "Presencial"
@@ -501,6 +615,8 @@ def extract_postulation_fields(text: str) -> dict:
         data["work_type"] = "Remoto"
     elif any(k in full_text for k in ["híbrido", "hybrid"]):
         data["work_type"] = "Híbrido"
+    if "lunes a viernes" in full_text:
+        data["work_type"] = "Presencial"
 
     # ---------------- EXPERIENCE ----------------
     exp_match = re.search(r"experiencia.*?(\d+)\s*(meses|años)", full_text)
@@ -517,6 +633,14 @@ def extract_postulation_fields(text: str) -> dict:
     applied_match = re.search(r"más de (\d+)\s+solicitudes", full_text)
     if applied_match:
         data["candidates_applied"] = int(applied_match.group(1))
+
+    for line in lines:
+        if any(kw in line.lower() for kw in ["se requiere", "tener", "poseer", "estar inscrito"]):
+            data["requirements"].append(line.strip())
+
+    for line in lines:
+        if any(kw in line.lower() for kw in ["aptitudes", "habilidades"]):
+            data["requirements"].append(line.strip())
 
     # ---------------- REQUIREMENTS ----------------
     for line in lines:
@@ -581,6 +705,119 @@ def ocr_postulation():
     db.session.commit()
 
     return jsonify(postulation.serialize()), 201
+
+
+@api.route('/chat', methods=["POST"])
+@jwt_required()
+def chat():
+    try:
+        user_id = get_jwt_identity()
+        data = request.json or {}
+        user_message = data.get("message", "").lower().strip()
+
+        if user_id not in sessions:
+            sessions[user_id] = {
+                "state": "WAIT_READY",
+                "role": None,
+                "question_index": 0
+            }
+            return jsonify({
+                "response": "👋 ¿Estás listo para una simulación de entrevista? (sí / no)"
+            })
+
+        session = sessions[user_id]
+
+        if session["state"] == "WAIT_READY":
+            if user_message in ["si", "sí", "yes"]:
+                session["state"] = "WAIT_ROLE"
+                return jsonify({
+                    "response": (
+                        "Perfecto 🚀\n"
+                        "Elige el tipo de entrevista:\n"
+                        "1) Frontend (FE)\n"
+                        "2) Backend (BE)\n"
+                        "3) React\n"
+                        "4) Angular\n"
+                        "5) Preguntas personales"
+                    )
+                })
+
+            if user_message in ["no", "nop", "nope"]:
+                return jsonify({
+                    "response": "👌 Cuando estés listo escribe 'sí'."
+                })
+
+            return jsonify({
+                "response": "Por favor responde únicamente: sí o no."
+            })
+
+        if session["state"] == "WAIT_ROLE":
+            roles = {
+                "1": "frontend",
+                "2": "backend",
+                "3": "react",
+                "4": "angular",
+                "5": "personal"
+            }
+
+            if user_message not in roles:
+                return jsonify({
+                    "response": "Selecciona una opción válida (1-5)."
+                })
+
+            role = roles[user_message]
+            session["role"] = role
+            session["state"] = "INTERVIEW"
+            session["question_index"] = 0
+
+            first_question = QUESTIONS[role][0]
+            return jsonify({
+                "response": (
+                    f"🎯 Entrevista {role.upper()} iniciada.\n\n"
+                    f"Pregunta 1:\n{first_question}"
+                )
+            })
+
+        if session["state"] == "INTERVIEW":
+            role = session["role"]
+            q_index = session.get("question_index", 0)
+
+            q_index += 1
+
+            if q_index < len(QUESTIONS[role]):
+                session["question_index"] = q_index
+                next_question = QUESTIONS[role][q_index]
+                return jsonify({
+                    "response": f"Pregunta {q_index + 1}:\n{next_question}"
+                })
+            else:
+                session["state"] = "FINISHED"
+                resources = "\n".join(
+                    f"- {url}" for url in RESOURCES.get(role, []))
+                return jsonify({
+                    "response": (
+                        "✅ ¡Buen trabajo!\n\n"
+                        "📚 Recursos recomendados para seguir entrenando:\n"
+                        f"{resources}\n\n"
+                        "¿Quieres otra simulación? (sí / no)"
+                    )
+                })
+
+        if session["state"] == "FINISHED":
+            if user_message in ["si", "sí", "yes"]:
+                session["state"] = "WAIT_ROLE"
+                session["question_index"] = 0
+                return jsonify({
+                    "response": "Perfecto 👍 Elige nuevamente una opción (1-5)."
+                })
+
+            return jsonify({
+                "response": "👋 Gracias por practicar. ¡Éxitos!"
+            })
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"response": f"Error: {str(e)}"}), 500
 
 
 
@@ -671,100 +908,331 @@ def user_detail():
 
 @api.route("/cv", methods=["GET"])
 @jwt_required()
-def get_cv():
+def get_all_cvs():
     try:
         current_user_id = get_jwt_identity()
-        cv = CV.query.filter_by(user_id=current_user_id).first()
-
-        if not cv:
-            return jsonify({'success': False, 'message': 'CV no encontrado'}), 404
-
-        datos = json.loads(cv.datos)
+        cvs = CV.query.filter_by(user_id=current_user_id).all()
 
         return jsonify({
-            'success': True,
-            'datos': datos,
-            'fecha_creacion': cv.fecha_creacion.isoformat() if cv.fecha_creacion else None,
-            'fecha_modificacion': cv.fecha_modificacion.isoformat() if cv.fecha_modificacion else None
+            "success": True,
+            "cvs": [cv.serialize() for cv in cvs]
         }), 200
 
-    except json.JSONDecodeError as e:
-        return jsonify({'success': False, 'message': 'Error al leer los datos del CV'}), 500
+    except Exception as e:
+        print(f"ERROR: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@api.route("/cv/<int:cv_id>", methods=["GET"])
+@jwt_required()
+def get_cv_by_id(cv_id):
+    try:
+        current_user_id = get_jwt_identity()
+        cv = CV.query.filter_by(id=cv_id, user_id=current_user_id).first()
+
+        if not cv:
+            return jsonify({"success": False, "message": "CV no encontrado"}), 404
+
+        return jsonify({"success": True, "cv": cv.serialize()}), 200
 
     except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print(f"ERROR: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 @api.route("/cv", methods=["POST"])
 @jwt_required()
-def save_cv():
+def create_cv():
     try:
         current_user_id = get_jwt_identity()
         data = request.get_json()
 
         if not data:
-            return jsonify({'success': False, 'message': 'No se enviaron datos'}), 400
+            return jsonify({"success": False, "message": "No se enviaron datos"}), 400
 
-        if not data.get('nombre'):
-            return jsonify({'success': False, 'message': 'El nombre es obligatorio'}), 400
+        nuevo_cv = CV(
+            user_id=current_user_id,
+            datos=json.dumps(data, ensure_ascii=False),
+            fecha_creacion=datetime.utcnow(),
+            fecha_modificacion=datetime.utcnow()
+        )
 
-        if not data.get('email'):
-            return jsonify({'success': False, 'message': 'El email es obligatorio'}), 400
-
-        if not data.get('telefono'):
-            return jsonify({'success': False, 'message': 'El teléfono es obligatorio'}), 400
-
-        json_data = json.dumps(data, ensure_ascii=False)
-        cv = CV.query.filter_by(user_id=current_user_id).first()
-
-        if cv:
-            cv.datos = json_data
-            cv.fecha_modificacion = datetime.utcnow()
-        else:
-            cv = CV(
-                user_id=current_user_id,
-                datos=json_data,
-                fecha_creacion=datetime.utcnow(),
-                fecha_modificacion=datetime.utcnow()
-            )
-            db.session.add(cv)
-
+        db.session.add(nuevo_cv)
         db.session.commit()
 
-        return jsonify({'success': True, 'message': 'CV guardado correctamente', 'cv_id': cv.id}), 200
+        return jsonify({
+            "success": True,
+            "cv": nuevo_cv.serialize()
+        }), 201
 
     except Exception as e:
         print(f"ERROR: {e}")
-        import traceback
-        traceback.print_exc()
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error al guardar: {str(e)}'}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
-@api.route("/cv", methods=["DELETE"])
+@api.route("/cv/<int:cv_id>", methods=["PUT"])
 @jwt_required()
-def delete_cv():
+def update_cv(cv_id):
     try:
         current_user_id = get_jwt_identity()
-        cv = CV.query.filter_by(user_id=current_user_id).first()
+        data = request.get_json()
+
+        cv = CV.query.filter_by(id=cv_id, user_id=current_user_id).first()
 
         if not cv:
-            return jsonify({'success': False, 'message': 'CV no encontrado'}), 404
+            return jsonify({"success": False, "message": "CV no encontrado"}), 404
+
+        cv.datos = json.dumps(data, ensure_ascii=False)
+        cv.fecha_modificacion = datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "cv": cv.serialize()
+        }), 200
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@api.route("/cv/<int:cv_id>", methods=["DELETE"])
+@jwt_required()
+def delete_cv(cv_id):
+    try:
+        current_user_id = get_jwt_identity()
+        cv = CV.query.filter_by(id=cv_id, user_id=current_user_id).first()
+
+        if not cv:
+            return jsonify({"success": False, "message": "CV no encontrado"}), 404
 
         db.session.delete(cv)
         db.session.commit()
 
-        return jsonify({'success': True, 'message': 'CV eliminado correctamente'}), 200
+        return jsonify({"success": True, "message": "CV eliminado correctamente"}), 200
 
     except Exception as e:
         print(f"ERROR: {e}")
-        import traceback
-        traceback.print_exc()
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error al eliminar: {str(e)}'}), 500
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+
+@api.route("/cv/<int:cv_id>/pdf", methods=["GET"])
+@jwt_required()
+def generate_cv_pdf(cv_id):
+    try:
+        current_user_id = get_jwt_identity()
+        cv = CV.query.filter_by(id=cv_id, user_id=current_user_id).first()
+
+        if not cv:
+            return jsonify({"success": False, "message": "CV no encontrado"}), 404
+
+        datos = json.loads(cv.datos)
+
+        def normalizar_periodos(lista):
+            for item in lista:
+                periodo = item.get("periodo", "")
+                if periodo:
+                    partes = periodo.replace("–", "-").split("-")
+                    if len(partes) == 2:
+                        item["inicio"] = partes[0].strip()
+                        item["fin"] = partes[1].strip()
+                    else:
+                        item["inicio"] = periodo
+                        item["fin"] = ""
+                item.setdefault("inicio", "")
+                item.setdefault("fin", "")
+
+        datos.setdefault("perfil", datos.get("resumen", ""))
+        datos.setdefault("habilidades", [])
+        datos.setdefault("experiencia", [])
+        datos.setdefault("educacion", [])
+        datos.setdefault("ubicacion", "")
+        datos.setdefault("linkedin", "")
+        datos.setdefault("github", "")
+
+        normalizar_periodos(datos["experiencia"])
+        normalizar_periodos(datos["educacion"])
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+
+        width, height = A4
+        x_margin = 60
+        y = height - 80
+
+        title_color = HexColor("#005A9C")
+        text_color = HexColor("#2E2E2E")
+        muted_color = HexColor("#555555")
+        border_color = HexColor("#CCCCCC")
+
+        p.setStrokeColor(border_color)
+        p.setLineWidth(1)
+        p.rect(x_margin - 20, 50, width - (x_margin - 20)
+               * 2, height - 120, stroke=1, fill=0)
+
+        foto_base64 = datos.get("foto", "")
+        text_x = x_margin
+        text_y = y
+
+        if foto_base64:
+            try:
+                if foto_base64.startswith("data:image"):
+                    foto_base64 = foto_base64.split(",")[1]
+                foto_bytes = base64.b64decode(foto_base64)
+                foto_image = ImageReader(BytesIO(foto_bytes))
+                foto_width = 110
+                foto_height = 110
+                foto_x = x_margin
+                foto_y = y
+                p.drawImage(foto_image, foto_x, foto_y - foto_height, foto_width,
+                            foto_height, preserveAspectRatio=True, mask='auto')
+                text_x = foto_x + foto_width + 25
+                text_y = foto_y
+            except:
+                text_x = x_margin
+                text_y = y
+
+        nombre = datos.get("nombre", "")[:60]
+        font_size = 22
+        max_nombre_width = width - text_x - x_margin
+        while p.stringWidth(nombre, "Helvetica-Bold", font_size) > max_nombre_width and font_size > 12:
+            font_size -= 1
+
+        p.setFont("Helvetica-Bold", font_size)
+        p.setFillColor(title_color)
+        p.drawString(text_x, text_y, nombre)
+        text_y -= font_size + 4
+
+        p.setFont("Helvetica", 11)
+        p.setFillColor(muted_color)
+
+        if datos.get("email"):
+            p.drawString(text_x, text_y, f"Email: {datos['email']}")
+            text_y -= 16
+        if datos.get("telefono"):
+            p.drawString(text_x, text_y, f"Teléfono: {datos['telefono']}")
+            text_y -= 16
+        if datos.get("direccion"):
+            p.drawString(text_x, text_y, f"Dirección: {datos['direccion']}")
+            text_y -= 16
+        if datos.get("ubicacion"):
+            p.drawString(text_x, text_y, f"Ubicación: {datos['ubicacion']}")
+            text_y -= 16
+        if datos.get("linkedin"):
+            p.drawString(text_x, text_y, f"LinkedIn: {datos['linkedin']}")
+            text_y -= 16
+        if datos.get("github"):
+            p.drawString(text_x, text_y, f"GitHub: {datos['github']}")
+            text_y -= 16
+
+        y = min(y - 130, text_y - 40)
+
+        p.setStrokeColor(border_color)
+        p.setLineWidth(0.5)
+        p.line(x_margin - 10, y, width - x_margin + 10, y)
+        y -= 30
+
+        from reportlab.platypus import Paragraph
+        from reportlab.lib.styles import getSampleStyleSheet
+
+        styles = getSampleStyleSheet()
+        style = styles["Normal"]
+        style.fontName = "Helvetica"
+        style.fontSize = 11
+        style.textColor = text_color
+        style.leading = 14
+
+        def seccion(titulo):
+            nonlocal y
+            p.setFont("Helvetica-Bold", 13)
+            p.setFillColor(title_color)
+            p.drawString(x_margin, y, titulo.upper())
+            y -= 8
+            p.setStrokeColor(border_color)
+            p.setLineWidth(0.3)
+            p.line(x_margin, y, width - x_margin, y)
+            y -= 20
+
+        if datos["perfil"]:
+            seccion("Perfil profesional")
+            para = Paragraph(datos["perfil"], style)
+            w, h = para.wrap(width - 2 * x_margin, height)
+            para.drawOn(p, x_margin, y - h)
+            y -= h + 20
+
+        if datos["experiencia"]:
+            seccion("Experiencia")
+            for exp in datos["experiencia"]:
+                if exp.get("puesto"):
+                    p.setFont("Helvetica-Bold", 11)
+                    p.setFillColor(text_color)
+                    p.drawString(x_margin, y, exp["puesto"])
+                    y -= 14
+                if exp.get("empresa"):
+                    p.setFont("Helvetica", 11)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, exp["empresa"])
+                    y -= 14
+                periodo = f"{exp['inicio']} – {exp['fin']}".strip(" –")
+                if periodo:
+                    p.setFont("Helvetica-Oblique", 10)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, periodo)
+                    y -= 12
+                if exp.get("descripcion"):
+                    para = Paragraph(exp["descripcion"], style)
+                    w, h = para.wrap(width - 2 * x_margin, height)
+                    para.drawOn(p, x_margin, y - h)
+                    y -= h + 10
+                y -= 6
+            y -= 10
+
+        if datos["educacion"]:
+            seccion("Educación")
+            for edu in datos["educacion"]:
+                if edu.get("titulo"):
+                    p.setFont("Helvetica-Bold", 11)
+                    p.setFillColor(text_color)
+                    p.drawString(x_margin, y, edu["titulo"])
+                    y -= 14
+                if edu.get("institucion"):
+                    p.setFont("Helvetica", 11)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, edu["institucion"])
+                    y -= 14
+                periodo = f"{edu['inicio']} – {edu['fin']}".strip(" –")
+                if periodo:
+                    p.setFont("Helvetica-Oblique", 10)
+                    p.setFillColor(muted_color)
+                    p.drawString(x_margin, y, periodo)
+                    y -= 12
+                y -= 6
+            y -= 10
+
+        if datos["habilidades"]:
+            seccion("Habilidades")
+            skills = " · ".join(datos["habilidades"])
+            para = Paragraph(skills, style)
+            w, h = para.wrap(width - 2 * x_margin, height)
+            para.drawOn(p, x_margin, y - h)
+            y -= h + 10
+
+        p.showPage()
+        p.save()
+
+        buffer.seek(0)
+        pdf_content = buffer.getvalue()
+
+        return Response(pdf_content, mimetype="application/pdf", headers={"Content-Disposition": f"inline; filename=cv-{cv_id}.pdf"})
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 @api.route("/cv/export", methods=["GET"])
@@ -927,50 +1395,22 @@ def status_count():
     return jsonify({"postulation": postulacion})
 
 
-@api.route("/postulacion/abierta", methods=["GET"])
-@jwt_required()
-def status_abierta_get():
-    current_user = get_jwt_identity()
-    postulacion = Postulations.query.filter_by(
-        user_id=current_user, postulation_state="abierta").count()
-    return jsonify({"abierta": postulacion})
-
-
-@api.route("/postulacion/en_proceso", methods=["GET"])
-@jwt_required()
-def status_en_proceso_get():
-    current_user = get_jwt_identity()
-    postulacion = Postulations.query.filter_by(
-        user_id=current_user, postulation_state="en proceso").count()
-    return jsonify({"en_proceso": postulacion})
-
-
-@api.route("/postulacion/entrevista", methods=["GET"])
+@api.route("/status", methods=["GET"])
 def status_entrevista_get():
-    postulacion = Stages.query.filter_by( stage_name="hr_interview").count()
-    return jsonify({"entrevista": postulacion})
+    entrevista = Stages.query.filter_by( stage_name="hr_interview").count()
+    offer = Stages.query.filter_by(stage_name="offer").count()
+    process_closure = Stages.query.filter_by( stage_name="process_closure").count()
+    aceptada = Postulations.query.filter_by( postulation_state="aceptada").count()
+    return jsonify({"entrevista": entrevista,
+                    "offer":offer,
+                    "descartado": process_closure,
+                    "aceptada": aceptada
+                    })
 
 
-@api.route("/postulacion/oferta", methods=["GET"])
-def status_oferta_get():
-    postulacion = Stages.query.filter_by(
-         stage_name="offer").count()
-    return jsonify({"oferta": postulacion})
 
 
-@api.route("/postulacion/descartado", methods=["GET"])
-def status_descartado_get():
-    postulacion = Stages.query.filter_by( stage_name="process_closure").count()
-    return jsonify({"descartado": postulacion})
 
-
-@api.route("/postulacion/aceptada", methods=["GET"])
-@jwt_required()
-def status_aceptada_get():
-    current_user = get_jwt_identity()
-    postulacion = Postulations.query.filter_by(
-        user_id=current_user, postulation_state="aceptada").count()
-    return jsonify({"aceptada": postulacion})
 
 
 @api.route("/profile", methods=["GET"])
@@ -1151,7 +1591,7 @@ def complete_next_stage(id):
     action = request.args.get('action')
     current_user = get_jwt_identity()
 
-    if action not in ('next','prev'):
+    if action not in ('next', 'prev'):
         return jsonify({'error': 'Invalid action'}), 400
 
     postulation = Postulations.query.filter_by(
@@ -1161,7 +1601,7 @@ def complete_next_stage(id):
 
     if not postulation:
         return jsonify({"error": "Postulation not found"}), 404
-    
+
     if action == 'next':
         stage = Stages.query.filter_by(
             postulation_id=id,
@@ -1176,10 +1616,10 @@ def complete_next_stage(id):
 
         message = f'Stage "{stage.stage_name}" marked as completed'
 
-    else :
+    else:
         stage = Stages.query.filter_by(
-        postulation_id=id,
-        stage_completed=True
+            postulation_id=id,
+            stage_completed=True
         ).order_by(Stages.id.desc()).first()
 
         if not stage:
@@ -1195,3 +1635,97 @@ def complete_next_stage(id):
         "message": message,
         "stage": stage.serialize()
     }), 200
+
+
+"""----------- TO DO ROUTES ------------ """
+
+
+@api.route('/', methods=['GET'])
+@jwt_required()
+def get_todos():
+    current_user = get_jwt_identity()
+
+    todos = (
+        TodoList.query
+        .filter_by(user_id=current_user)
+        .order_by(TodoList.id.asc())
+        .all()
+    )
+
+    if not todos:
+        return jsonify([]), 200
+
+    return jsonify([{
+        "id": t.id,
+        "todo_name": t.todo_name,
+        "todo_complete": t.todo_complete
+    } for t in todos]), 200
+
+
+@api.route('/', methods=['POST'])
+@jwt_required()
+def create_new_todo():
+    data = request.get_json()
+    current_user = get_jwt_identity()
+
+    if not data or not data.get('todo_name'):
+        return jsonify({"error": "todo_name is required"}), 400
+
+    new_todo = TodoList(
+        todo_name=data.get('todo_name'),
+        todo_complete=data.get('todo_complete', False),
+        user_id=current_user
+    )
+
+    db.session.add(new_todo)
+    db.session.commit()
+
+    return jsonify({
+        "id": new_todo.id,
+        "todo_name": new_todo.todo_name,
+        "todo_complete": new_todo.todo_complete
+    }), 201
+
+
+@api.route('/', methods=['PUT'])
+@jwt_required()
+def update_status():
+    current_user = get_jwt_identity()
+    todo_id = request.args.get('id', type=int)
+
+    todo = TodoList.query.filter_by(
+        id=todo_id,
+        user_id=current_user
+    ).first()
+
+    if not todo:
+        return jsonify({'error': 'todo not found'}), 400
+
+    todo.todo_complete = not todo.todo_complete
+
+    db.session.commit()
+
+    return jsonify({'id': todo.id, 'message': 'todo updated'})
+
+
+@api.route('/', methods=['DELETE'])
+@jwt_required()
+def delete_todo():
+    current_user = get_jwt_identity()
+
+    todo_id = request.args.get('id', type=int)
+    if not todo_id:
+        return jsonify({'error': 'todo id is mandatory'}), 400
+
+    todo = TodoList.query.filter_by(
+        id=todo_id,
+        user_id=current_user
+    ).first()
+
+    if not todo:
+        return jsonify({'error': 'todo not found'}), 400
+
+    db.session.delete(todo)
+    db.session.commit()
+
+    return jsonify({'message': 'Todo removed'}), 200
