@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../hooks/UserContextProvier.jsx";
-import Sidebar from "./Sidebar.jsx";
 import CVPreview from "./CVPreview.jsx";
 import CVEditor from "./CVEditor.jsx";
-import { createEmptyCV, cloneCV } from "./utils/cvHelpers.js";
+import { createEmptyCV } from "./utils/cvHelpers.js";
 import "../../styles/CVAdministrator.css";
-
+import ModalAgregarCV from "./ModalAgregarCV.jsx";
+import { Pencil, Trash2 } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
+import { useRef } from "react";
+import ShareDropdown from "./ShareDropdown";
 
 const CVAdministrator = () => {
     const { token } = useContext(UserContext);
@@ -14,171 +17,282 @@ const CVAdministrator = () => {
     const [cvList, setCvList] = useState([]);
     const [selectedCVId, setSelectedCVId] = useState(null);
     const [formData, setFormData] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
+    const { isEditing, setIsEditing } = useOutletContext();
     const [isLoading, setIsLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [showAgregarModal, setShowAgregarModal] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const cvRef = useRef();
 
-    useEffect(() => {
-        if (token) loadCVList();
-    }, [token]);
+    const normalizeCV = (datos) => ({
+        ...datos,
+        experiencia: datos.experiencia || [],
+        educacion: datos.educacion || [],
+        habilidades: datos.habilidades || [],
+        idiomas: datos.idiomas || []
+    });
 
     const loadCVList = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`${backendUrl}/api/cv`, {
+            const res = await fetch(`${backendUrl}/cv`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
 
             if (data.success && Array.isArray(data.cvs)) {
-                setCvList(data.cvs);
+                const normalizados = data.cvs.map((cv) => ({
+                    id: cv.id,
+                    datos: normalizeCV(cv.datos)
+                }));
 
-                if (data.cvs.length > 0) {
-                    setSelectedCVId(data.cvs[0].id);
-                    setFormData(data.cvs[0]);
+                setCvList(normalizados);
+
+                if (normalizados.length > 0) {
+                    setSelectedCVId(normalizados[0].id);
+                    setFormData(normalizados[0].datos);
+                } else {
+                    setSelectedCVId(null);
+                    setFormData(null);
                 }
+
+                return normalizados;
             }
         } catch (err) {
             console.error("Error al cargar CVs:", err);
         } finally {
             setIsLoading(false);
         }
+
+        return [];
     };
+
+
+    useEffect(() => {
+        if (token) loadCVList();
+    }, [token]);
 
     const selectCV = (id) => {
         const cv = cvList.find((c) => c.id === id);
         if (cv) {
             setSelectedCVId(id);
-            setFormData(cv);
+            setFormData(normalizeCV(cv.datos));
             setIsEditing(false);
         }
     };
+
 
     const updateCurrentCV = (field, value) => {
         const updated = { ...formData, [field]: value };
         setFormData(updated);
 
         setCvList((prev) =>
-            prev.map((cv) => (cv.id === selectedCVId ? updated : cv))
+            prev.map((cv) =>
+                cv.id === selectedCVId ? { ...cv, datos: updated } : cv
+            )
         );
+    };
+
+    const handleSaveAs = async (cvData) => {
+        setSaving(true);
+
+        const nuevoCV = {
+            ...cvData,
+            id: null,
+            created_at: new Date().toISOString()
+        };
+
+        const res = await fetch(`${backendUrl}/cv`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(nuevoCV),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            const nuevo = {
+                id: data.cv.id,
+                datos: normalizeCV(data.cv.datos)
+            };
+
+            setCvList((prev) => [...prev, nuevo]);
+            setSelectedCVId(nuevo.id);
+            setFormData(nuevo.datos);
+            setIsEditing(false);
+        }
+
+        setSaving(false);
+    };
+
+    const handleSave = async (cvData) => {
+        setSaving(true);
+
+        const res = await fetch(`${backendUrl}/cv/${selectedCVId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(cvData),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            const actualizado = {
+                id: data.cv.id,
+                datos: normalizeCV(data.cv.datos)
+            };
+
+            setCvList((prev) =>
+                prev.map((cv) => (cv.id === actualizado.id ? actualizado : cv))
+            );
+
+            setFormData(actualizado.datos);
+            setIsEditing(false);
+        }
+
+        setSaving(false);
     };
 
     const createNewCV = () => {
         const nuevo = createEmptyCV();
-        setCvList((prev) => [...prev, nuevo]);
-        setSelectedCVId(nuevo.id);
-        setFormData(nuevo);
+        setSelectedCVId(null);
+        setFormData(normalizeCV(nuevo.datos));
         setIsEditing(true);
     };
 
-    const saveCV = async () => {
-        setSaving(true);
-
-        try {
-            if (!selectedCVId) {
-                const res = await fetch(`${backendUrl}/api/cv`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(formData),
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    setCvList((prev) => [...prev, data.cv]);
-                    setSelectedCVId(data.cv.id);
-                    setFormData(data.cv.datos);
-                    setIsEditing(false);
-                }
-
-                setSaving(false);
-                return;
-            }
-
-            const res = await fetch(`${backendUrl}/api/cv/${selectedCVId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                setCvList((prev) =>
-                    prev.map((cv) => (cv.id === selectedCVId ? data.cv : cv))
-                );
-                setFormData(data.cv.datos);
-                setIsEditing(false);
-            }
-        } catch (err) {
-            console.error("Error al guardar CV:", err);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-
-    const deleteCV = async () => {
+    const deleteCV = async (cvId) => {
         if (!confirm("¿Seguro que deseas eliminar este CV?")) return;
 
         try {
-            await fetch(`${backendUrl}/api/cv/${selectedCVId}`, {
+            const res = await fetch(`${backendUrl}/cv/${cvId}`, {
                 method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
             });
 
-            const updatedList = cvList.filter((cv) => cv.id !== selectedCVId);
-            setCvList(updatedList);
+            if (!res.ok) {
+                alert("No se pudo eliminar el CV");
+                return;
+            }
 
-            if (updatedList.length > 0) {
-                setSelectedCVId(updatedList[0].id);
-                setFormData(updatedList[0]);
+            const actualizada = await loadCVList();
+
+            if (actualizada.length > 0) {
+                setSelectedCVId(actualizada[0].id);
+                setFormData(actualizada[0].datos);
             } else {
                 setSelectedCVId(null);
                 setFormData(null);
             }
+
         } catch (err) {
             console.error("Error al eliminar CV:", err);
         }
     };
 
-    const cloneSelectedCV = () => {
-        const original = cvList.find((cv) => cv.id === selectedCVId);
-        if (!original) return;
 
-        const copia = cloneCV(original);
+    const handleView = (id) => {
+        selectCV(id);
+        setIsEditing(false);
+    };
 
-        setCvList((prev) => [...prev, copia]);
-        setSelectedCVId(copia.id);
-        setFormData(copia);
+    const handleEdit = (id) => {
+        selectCV(id);
         setIsEditing(true);
     };
 
+    const handleSelectForAdd = (id) => {
+        const original = cvList.find((cv) => cv.id === id);
+        if (!original) return;
+
+        const copia = normalizeCV(original.datos);
+        copia.titulo = "";
+
+        setFormData(copia);
+        setSelectedCVId(null);
+        setIsEditing(true);
+        setShowAgregarModal(false);
+    };
+
+    const handleExportPDF = async (id) => {
+        const cv = cvList.find((c) => c.id === id);
+        if (!cv) return;
+
+        setSelectedCVId(id);
+        setFormData(normalizeCV(cv.datos));
+        setIsEditing(false);
+        setIsOpen(true);
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        window.print();
+
+        setTimeout(() => setIsOpen(false), 1000);
+    };
+
+    console.log("CV LIST ACTUALIZADA:", cvList);
     return (
-        <div className="cv-layout">
+        <div className="cv-admin-container">
+            {showAgregarModal && (
+                <ModalAgregarCV cvList={cvList} onClose={() => setShowAgregarModal(false)} />
+            )}
 
-            <div className="cv-bar-horizontal">
-                {cvList.map((cv) => (
-                    <div key={cv.id} className="cv-card">
-                        <div className="cv-title">{cv.datos.titulo || "CV sin título"}</div>
-                        <div className="cv-actions">
-                            <button onClick={() => handleEdit(cv.id)}>🖉</button>
-                            <button onClick={() => handleAddFrom(cv.id)}>📄</button>
-                            <button onClick={() => handleDelete(cv.id)}>🗑️</button>
-                        </div>
-                    </div>
-                ))}
+            <div className="cv-topbar">
+                <div className="cv-topbar-title">Administrador de CVs</div>
 
-                <button className="cv-new-button" onClick={handleCreateNewCV}>
-                    + Nuevo CV
-                </button>
+                <div className="cv-topbar-actions">
+                    <button onClick={createNewCV}>+ Nuevo CV</button>
+                </div>
             </div>
+
+            {!isEditing && !isOpen && (
+                <table className="cv-table">
+                    <thead>
+                        <tr>
+                            <th>Descripcion CV</th>
+                            <th style={{ width: "160px" }}>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {cvList.map((cv) => (
+                            <tr key={cv.id}>
+                                <td>{cv.datos.titulo || "Sin título"}</td>
+
+                                <td>
+                                    <div className="cv-actions-row">
+                                        <button
+                                            type="button"
+                                            className="btn-cv-action btn-secondary"
+                                            onClick={() => handleEdit(cv.id)}
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn-cv-action btn-danger"
+                                            onClick={() => deleteCV(cv.id)}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+
+                                        <ShareDropdown cv={cv} />
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
 
             <main className="cv-main">
                 {isLoading ? (
@@ -188,22 +302,20 @@ const CVAdministrator = () => {
                         formData={formData}
                         updateCurrentCV={updateCurrentCV}
                         setIsEditing={setIsEditing}
-                        saveCV={saveCV}
                         saving={saving}
+                        onSave={handleSave}
+                        onSaveAs={handleSaveAs}
                     />
                 ) : formData ? (
-                    <CVPreview
-                        formData={formData}
-                        setIsEditing={setIsEditing}
-                        deleteCV={deleteCV}
-                        cloneCV={cloneSelectedCV}
-                    />
+                    <div className="cv-pdf-container" style={{ display: isOpen ? "block" : "none" }}>
+                        <CVPreview formData={formData} />
+                    </div>
                 ) : (
                     <p>No hay CV seleccionado</p>
                 )}
             </main>
         </div>
-    )
+    );
 };
 
 export default CVAdministrator;

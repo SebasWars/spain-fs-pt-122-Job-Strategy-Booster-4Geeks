@@ -1,5 +1,8 @@
 import React from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, XCircle } from "lucide-react";
+import { GraduationCap } from "lucide-react";
+
+
 
 const EducationSection = ({ formData, updateCurrentCV }) => {
     const addEducation = () => {
@@ -24,17 +27,24 @@ const EducationSection = ({ formData, updateCurrentCV }) => {
     };
 
     return (
-        <div className="cv-form-section">
-            <h3 className="cv-form-title">Formación Académica</h3>
+        <div className="cv-section-block">
+            <h3 className="cv-section-title">
+                <GraduationCap size={18} className="section-icon" />
+                Educación
+            </h3>
+
+            {(formData.educacion || []).length === 0 && (
+                <p className="cv-section-empty">Aún no has agregado educación.</p>
+            )}
 
             {(formData.educacion || []).map((edu, i) => (
-                <div key={i} className="cv-modal-card">
+                <div key={i} className="cv-item">
                     <button
-                        className="cv-modal-close"
+                        className="cv-item-remove"
                         type="button"
                         onClick={() => removeEducation(i)}
                     >
-                        <X size={16} />
+                        <XCircle size={18} />
                     </button>
 
                     <div className="cv-form-grid">
@@ -46,12 +56,12 @@ const EducationSection = ({ formData, updateCurrentCV }) => {
                                 onChange={(e) =>
                                     updateEducation(i, "institucion", e.target.value)
                                 }
-                                placeholder="Universidad o institución"
+                                placeholder="Nombre de la institución"
                             />
                         </div>
 
                         <div className="cv-form-group">
-                            <label>Título</label>
+                            <label>Título / Carrera</label>
                             <input
                                 className="cv-input"
                                 value={edu.titulo}
@@ -70,17 +80,31 @@ const EducationSection = ({ formData, updateCurrentCV }) => {
                                 onChange={(e) =>
                                     updateEducation(i, "periodo", e.target.value)
                                 }
-                                placeholder="Ej: 2016 - 2020"
+                                placeholder="Ej: 2018 - 2022"
                             />
                         </div>
+                    </div>
+
+                    <div className="cv-form-group">
+                        <label>Descripción</label>
+                        <textarea
+                            className="cv-input cv-textarea"
+                            value={edu.descripcion}
+                            onChange={(e) =>
+                                updateEducation(i, "descripcion", e.target.value)
+                            }
+                            placeholder="Describe logros, proyectos o especializaciones..."
+                            rows="3"
+                        />
                     </div>
                 </div>
             ))}
 
-            <button className="btn btn-outline" type="button" onClick={addEducation}>
-                <Plus size={18} /> Agregar formación académica
+            <button className="cv-add-btn" type="button" onClick={addEducation}>
+                <Plus size={18} /> Agregar educación
             </button>
         </div>
+
     );
 };
 

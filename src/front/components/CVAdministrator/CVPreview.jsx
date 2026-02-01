@@ -1,101 +1,80 @@
 import React from "react";
-import { Edit2, Trash2, FileText, Copy } from "lucide-react";
+import { Mail, Phone, MapPin, Globe, Wrench } from "lucide-react";
 
-const CVPreview = ({ formData, setIsEditing, deleteCV, cloneCV }) => {
-    const downloadPDF = () => {
-        const printWindow = window.open("", "", "width=800,height=600");
-        const doc = printWindow.document;
-
-        doc.write("<html><head><title>CV</title></head><body>");
-        doc.write(`<h1>${formData.nombre}</h1>`);
-        doc.write(`<p>${formData.email}</p>`);
-        doc.write(`<p>${formData.telefono}</p>`);
-        doc.write(`<p>${formData.ubicacion}</p>`);
-        doc.write("</body></html>");
-        doc.close();
-
-        setTimeout(() => printWindow.print(), 300);
-    };
-
+const CVPreview = ({ formData }) => {
     return (
-        <div className="cv-preview-container">
-            <div className="cv-preview-header">
-                <h2 className="cv-preview-title">
-                    <FileText size={22} /> {formData.nombre || "CV sin título"}
-                </h2>
+        <div className="cv-pdf-card">
+            <div className="cv-pdf-header">
+                <div className="cv-pdf-header-left">
+                    <h1 className="cv-name">{formData.nombre || "Nombre completo"}</h1>
 
-                <div className="cv-preview-actions">
-                    <button className="btn btn-primary" onClick={() => setIsEditing(true)}>
-                        <Edit2 size={18} />
-                    </button>
+                    <div className="cv-contact-line">
+                        <Mail size={18} className="cv-contact-icon" />
+                        <span>{formData.email || "correo@ejemplo.com"}</span>
+                    </div>
 
-                    <button className="btn btn-secondary" onClick={cloneCV}>
-                        <Copy size={18} />
-                    </button>
+                    <div className="cv-contact-line">
+                        <Phone size={18} className="cv-contact-icon" />
+                        <span>{formData.telefono || "+34 600 000 000"}</span>
+                    </div>
 
-                    <button className="btn btn-danger" onClick={deleteCV}>
-                        <Trash2 size={18} />
-                    </button>
+                    <div className="cv-contact-line">
+                        <MapPin size={18} className="cv-contact-icon" />
+                        <span>{formData.ubicacion || "Ciudad, País"}</span>
+                    </div>
 
-                    <button className="btn btn-secondary" onClick={downloadPDF}>
-                        PDF
-                    </button>
+                    {Array.isArray(formData.redes) &&
+                        formData.redes.map((red, i) => (
+                            <div key={i} className="cv-contact-line">
+                                <Globe size={18} className="cv-contact-icon" />
+                                <span>{red.tipo}: {red.url}</span>
+                            </div>
+                        ))}
                 </div>
-            </div>
 
-            <div className="cv-preview-content">
-                <h3>Información Personal</h3>
-                <p><strong>Email:</strong> {formData.email}</p>
-                <p><strong>Teléfono:</strong> {formData.telefono}</p>
-                <p><strong>Ubicación:</strong> {formData.ubicacion}</p>
-
-                {formData.resumen && (
-                    <>
-                        <h3>Resumen Profesional</h3>
-                        <p>{formData.resumen}</p>
-                    </>
-                )}
-
-                {formData.experiencia?.length > 0 && (
-                    <>
-                        <h3>Experiencia Laboral</h3>
-                        {formData.experiencia.map((exp, i) => (
-                            <div key={i} className="cv-preview-block">
-                                <p><strong>{exp.puesto}</strong> — {exp.empresa}</p>
-                                <p>{exp.periodo}</p>
-                                <p>{exp.descripcion}</p>
-                            </div>
-                        ))}
-                    </>
-                )}
-
-                {formData.educacion?.length > 0 && (
-                    <>
-                        <h3>Educación</h3>
-                        {formData.educacion.map((edu, i) => (
-                            <div key={i} className="cv-preview-block">
-                                <p><strong>{edu.titulo}</strong></p>
-                                <p>{edu.institucion}</p>
-                                <p>{edu.periodo}</p>
-                            </div>
-                        ))}
-                    </>
-                )}
-
-                {(formData.habilidades?.length > 0 || formData.idiomas?.length > 0) && (
-                    <>
-                        <h3>Habilidades e Idiomas</h3>
-
-                        {formData.habilidades?.length > 0 && (
-                            <p><strong>Habilidades:</strong> {formData.habilidades.join(", ")}</p>
-                        )}
-
-                        {formData.idiomas?.length > 0 && (
-                            <p><strong>Idiomas:</strong> {formData.idiomas.join(", ")}</p>
-                        )}
-                    </>
+                {formData.foto && (
+                    <div className="cv-pdf-header-right">
+                        <img
+                            src={formData.foto}
+                            alt="Foto de perfil"
+                            className="cv-photo-card"
+                        />
+                    </div>
                 )}
             </div>
+
+            {formData.resumen && (
+                <div className="cv-summary-block">
+                    <h2 className="cv-summary-title">Resumen profesional</h2>
+                    <p className="cv-summary-text">{formData.resumen}</p>
+                </div>
+            )}
+
+            {Array.isArray(formData.habilidades) && formData.habilidades.length > 0 && (
+                <div className="cv-section-block">
+                    <h3 className="cv-section-title">
+                        <Wrench size={18} className="section-icon" />
+                        Habilidades
+                    </h3>
+
+                    {formData.habilidades.map((skill, i) => (
+                        <div key={i} className="cv-item">{skill}</div>
+                    ))}
+                </div>
+            )}
+
+            {Array.isArray(formData.idiomas) && formData.idiomas.length > 0 && (
+                <div className="cv-section-block">
+                    <h3 className="cv-section-title">
+                        <Globe size={18} className="section-icon" />
+                        Idiomas
+                    </h3>
+
+                    {formData.idiomas.map((lang, i) => (
+                        <div key={i} className="cv-item">{lang}</div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

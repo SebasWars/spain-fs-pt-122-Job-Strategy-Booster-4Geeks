@@ -5,18 +5,21 @@ export const generateId = () => {
 export const createEmptyCV = () => {
   return {
     id: generateId(),
-    nombre: "",
-    email: "",
-    telefono: "",
-    ubicacion: "",
-    linkedin: "",
-    github: "",
-    resumen: "",
-    foto: "",
-    experiencia: [],
-    educacion: [],
-    habilidades: [],
-    idiomas: [],
+    datos: {
+      titulo: "Nuevo CV",
+      nombre: "",
+      email: "",
+      telefono: "",
+      ubicacion: "",
+      linkedin: "",
+      github: "",
+      resumen: "",
+      foto: "",
+      experiencia: [],
+      educacion: [],
+      habilidades: [],
+      idiomas: [],
+    },
   };
 };
 
@@ -28,6 +31,9 @@ export const cloneCV = (cv) => {
   return {
     ...cv,
     id: generateId(),
-    nombre: cv.nombre + " (Copia)",
+    datos: {
+      ...cv.datos,
+      titulo: (cv.datos?.titulo || "CV") + " (Copia)",
+    },
   };
 };
