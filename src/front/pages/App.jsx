@@ -8,7 +8,11 @@ import { UserContext } from "../hooks/UserContextProvier.jsx";
 import Registration from './RegisterPage.jsx';
 import LoadingScreen from "../components/LoadingScreen";
 import { translatePage as translatePageFunc } from "../hooks/usePageTranslate.js";
-
+import NavBarButton from '../components/navbar/NavBarButton.jsx';
+import "../styles/navbar.css";
+import {
+    faSun, faMoon
+} from "@fortawesome/free-solid-svg-icons";
 export default function App() {
     const { token, user, theme, toggleTheme, profile } = useContext(UserContext);
     const [loading, setLoading] = useState(true);
@@ -102,11 +106,11 @@ export default function App() {
     </div>
 )}
 */}
-
-                            <button className='btn btn-secondary' onClick={toggleTheme}>
-                                {theme === "dark" ? "Modo claro" : "Modo oscuro"}
-                            </button>
-
+                            <NavBarButton
+                                icon={theme === "dark" ? faSun : faMoon}
+                                className="theme_btn"
+                                onClick={toggleTheme}
+                            />
                             <select
                                 value={language}
                                 onChange={(e) => handleLanguageChange(e.target.value)}

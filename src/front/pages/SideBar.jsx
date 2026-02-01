@@ -10,7 +10,8 @@ import {
     faGear,
     faCircleQuestion,
     faFileLines,
-    faInfoCircle
+    faInfoCircle,
+    faRightFromBracket
 } from "@fortawesome/free-solid-svg-icons";
 
 import { UserContext } from "../hooks/UserContextProvier.jsx";
@@ -97,10 +98,14 @@ function Sidebar() {
                         to="/about"
                         onClick={() => handleNavigation("/about")}
                     />
+                    <NavBarButton
+                        icon={faRightFromBracket}
+                        label="Logout"
+                        to="#"
+                        onClick={handleLogout}
+                    />
 
-                    <button className="btn btn-secondary mt-2" onClick={handleLogout}>
-                        Logout
-                    </button>
+
                 </div>
             </div>
         </div>

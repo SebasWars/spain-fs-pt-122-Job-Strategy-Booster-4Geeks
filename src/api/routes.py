@@ -159,141 +159,259 @@ RESOURCES = {
 }
 ANSWERS = {
     "frontend": {
-        "¿Qué es el Virtual DOM y por qué es importante?":
-            "El Virtual DOM es una representación ligera del DOM real que mejora el rendimiento " \
-            "de las actualizaciones en la interfaz de usuario.",
-        "¿Qué es CSS Flexbox y para qué sirve?":
-            "Flexbox es un modelo de diseño CSS que facilita la distribución y alineación de elementos " \
-            "en un contenedor, adaptándose a diferentes tamaños de pantalla.",
-        "¿Qué es un closure en JavaScript?":
-            "Un closure es una función que recuerda el entorno donde fue creada, permitiendo acceder " \
-            "a variables externas aun cuando la función se ejecute fuera de ese contexto.",
-        "¿Cuál es la diferencia entre 'var', 'let' y 'const' en JavaScript?":
-            "'var' tiene alcance global o de función, 'let' y 'const' tienen alcance de bloque; 'const' " \
-            "define variables inmutables.",
-        "¿Qué son las promesas en JavaScript y cómo funcionan?":
-            "Las promesas son objetos que representan la eventual finalización o fallo de una operación asíncrona.",
-        "¿Cómo manejas eventos en JavaScript?":
-            "Se usan listeners para capturar eventos y ejecutar funciones callback cuando ocurren.",
-        "¿Qué es el modelo de caja (box model) en CSS?":
-            "Es la forma en que CSS representa cada elemento como una caja compuesta por contenido, " \
-            "padding, border y margin.",
-        "¿Qué son las media queries y cómo se usan para responsive design?":
-            "Son reglas CSS que aplican estilos condicionales según las características del dispositivo, " \
-            "como ancho de pantalla.",
-        "¿Qué es la herencia en CSS y cómo funciona?":
-            "Es cuando ciertas propiedades CSS se transfieren de un elemento padre a sus hijos automáticamente."
+        "¿Qué es el Virtual DOM y por qué es importante?": [
+            "El Virtual DOM es una representación ligera del DOM real que mejora el rendimiento de las actualizaciones.",
+            "Es una copia virtual del DOM que permite comparar cambios antes de aplicarlos al DOM real.",
+            "Sirve para optimizar renderizados evitando manipulaciones directas costosas del DOM."
+        ],
+        "¿Qué es CSS Flexbox y para qué sirve?": [
+            "Flexbox es un modelo CSS para distribuir y alinear elementos fácilmente.",
+            "Permite crear layouts flexibles adaptados a distintos tamaños de pantalla.",
+            "Se usa para organizar elementos en filas o columnas de forma eficiente."
+        ],
+        "¿Qué es un closure en JavaScript?": [
+            "Un closure es una función que mantiene acceso a variables externas.",
+            "Es una función que recuerda su entorno léxico.",
+            "Permite usar datos de una función padre después de ejecutarse."
+        ],
+        "¿Cuál es la diferencia entre 'var', 'let' y 'const' en JavaScript?": [
+            "'var' tiene alcance de función; 'let' y 'const' de bloque.",
+            "'const' no permite reasignación, 'let' sí.",
+            "'var' se eleva (hoisting), 'let' y 'const' no igual."
+        ],
+        "¿Qué son las promesas en JavaScript y cómo funcionan?": [
+            "Representan resultados futuros de operaciones asíncronas.",
+            "Permiten manejar async con estados: pending, resolved, rejected.",
+            "Encapsulan operaciones que terminarán más tarde."
+        ],
+        "¿Cómo manejas eventos en JavaScript?": [
+            "Con addEventListener y callbacks.",
+            "Asignando handlers a eventos del DOM.",
+            "Usando listeners que reaccionan a acciones del usuario."
+        ],
+        "¿Qué es el modelo de caja (box model) en CSS?": [
+            "Define contenido, padding, borde y margen.",
+            "Cada elemento se representa como una caja.",
+            "Explica cómo se calcula el tamaño total de un elemento."
+        ],
+        "¿Qué son las media queries y cómo se usan para responsive design?": [
+            "Reglas CSS condicionales según tamaño de pantalla.",
+            "Permiten adaptar estilos por dispositivo.",
+            "Se usan para hacer diseño responsive."
+        ],
+        "¿Qué es la herencia en CSS y cómo funciona?": [
+            "Algunas propiedades pasan del padre al hijo.",
+            "Los elementos heredan ciertos estilos.",
+            "Reduce duplicación de reglas."
+        ]
     },
+
     "backend": {
-        "¿Qué es una API REST?":
-            "REST es un estilo arquitectónico para servicios web que usan HTTP para realizar operaciones CRUD.",
-        "¿Qué es una base de datos relacional?":
-            "Es un sistema que almacena datos en tablas con relaciones entre ellas.",
-        "¿Qué son los middlewares en backend?":
-            "Funciones que se ejecutan entre la solicitud y la respuesta para procesar o modificar datos.",
-        "¿Qué diferencias hay entre SQL y NoSQL?":
-            "SQL usa bases de datos estructuradas y NoSQL almacena datos no estructurados o flexibles.",
-        "¿Qué es la autenticación y autorización?":
-            "Autenticación verifica identidad, autorización controla acceso a recursos.",
-        "¿Qué es un token JWT y para qué se usa?":
-            "JWT es un token que permite autenticar y transmitir información segura entre cliente y servidor.",
-        "¿Cómo funciona el manejo de sesiones en aplicaciones web?":
-            "Se guarda información del usuario para mantener su estado entre peticiones.",
-        "¿Qué es un servidor web y cómo funciona?":
-            "Es un software que responde a peticiones HTTP enviando archivos o datos.",
-        "¿Qué es la escalabilidad en backend?":
-            "Capacidad del sistema para manejar mayor carga aumentando recursos."
+        "¿Qué es una API REST?": [
+            "Es un estilo para crear APIs usando HTTP.",
+            "Permite operaciones CRUD vía endpoints.",
+            "Define comunicación cliente-servidor sin estado."
+        ],
+        "¿Qué es una base de datos relacional?": [
+            "Organiza datos en tablas relacionadas.",
+            "Usa filas y columnas con claves.",
+            "Permite relaciones entre entidades."
+        ],
+        "¿Qué son los middlewares en backend?": [
+            "Funciones intermedias entre request y response.",
+            "Procesan peticiones antes del controlador.",
+            "Sirven para auth, logs o validación."
+        ],
+        "¿Qué diferencias hay entre SQL y NoSQL?": [
+            "SQL es estructurado; NoSQL flexible.",
+            "SQL usa tablas; NoSQL documentos o claves.",
+            "NoSQL escala horizontal más fácil."
+        ],
+        "¿Qué es la autenticación y autorización?": [
+            "Auth verifica identidad; autorización permisos.",
+            "Una valida usuario; otra acceso.",
+            "Son capas de seguridad distintas."
+        ],
+        "¿Qué es un token JWT y para qué se usa?": [
+            "Token firmado para autenticar usuarios.",
+            "Permite sesiones sin estado.",
+            "Transporta datos seguros entre partes."
+        ],
+        "¿Cómo funciona el manejo de sesiones en aplicaciones web?": [
+            "Guarda estado entre requests.",
+            "Asocia usuario con ID de sesión.",
+            "Mantiene login activo."
+        ],
+        "¿Qué es un servidor web y cómo funciona?": [
+            "Responde peticiones HTTP.",
+            "Entrega recursos al cliente.",
+            "Sirve contenido y APIs."
+        ],
+        "¿Qué es la escalabilidad en backend?": [
+            "Capacidad de soportar más carga.",
+            "Crecer sin perder rendimiento.",
+            "Escalar vertical u horizontalmente."
+        ]
     },
+
     "react": {
-        "¿Qué es el estado (state) en React?":
-            "El estado es un objeto que almacena datos que pueden cambiar y afectar el renderizado.",
-        "¿Qué es un Hook?":
-            "Funciones que permiten usar estado y otras características de React en componentes funcionales.",
-        "¿Cómo funcionan los componentes funcionales?":
-            "Son funciones que retornan JSX para representar UI y pueden usar hooks para manejar estado.",
-        "¿Qué es el ciclo de vida de un componente en React?":
-            "Son fases por las que pasa un componente desde su creación hasta destrucción.",
-        "¿Qué es Redux y para qué se utiliza?":
-            "Es una librería para manejar el estado global de la aplicación de forma predecible.",
-        "¿Qué es el Context API en React?":
-            "Permite compartir datos entre componentes sin pasar props manualmente.",
-        "¿Cómo optimizas el rendimiento en una aplicación React?":
-            "Usando memoización, evitando renders innecesarios y dividiendo componentes.",
-        "¿Qué son las props y cómo se usan?":
-            "Son propiedades que se pasan a componentes para configurarlos o mostrar datos.",
-        "¿Qué diferencia hay entre componentes controlados y no controlados?":
-            "Controlados tienen su estado gestionado por React, no controlados por el DOM directamente."
+        "¿Qué es el estado (state) en React?": [
+            "Datos que controlan renderizado.",
+            "Información mutable del componente.",
+            "Valores que al cambiar re-renderizan."
+        ],
+        "¿Qué es un Hook?": [
+            "Funciones especiales de React.",
+            "Permiten usar estado en funciones.",
+            "Extienden componentes funcionales."
+        ],
+        "¿Cómo funcionan los componentes funcionales?": [
+            "Son funciones que retornan JSX.",
+            "Renderizan UI sin clases.",
+            "Usan hooks para lógica."
+        ],
+        "¿Qué es el ciclo de vida de un componente en React?": [
+            "Fases de montaje y desmontaje.",
+            "Momentos de render y actualización.",
+            "Controlado con hooks."
+        ],
+        "¿Qué es Redux y para qué se utiliza?": [
+            "Gestor de estado global.",
+            "Centraliza datos de app.",
+            "Hace estado predecible."
+        ],
+        "¿Qué es el Context API en React?": [
+            "Comparte datos sin props drilling.",
+            "Estado global simple.",
+            "Comunicación entre componentes."
+        ],
+        "¿Cómo optimizas el rendimiento en una aplicación React?": [
+            "Memoización y lazy loading.",
+            "Evitar renders innecesarios.",
+            "Dividir componentes."
+        ],
+        "¿Qué son las props y cómo se usan?": [
+            "Datos que recibe un componente.",
+            "Configuran comportamiento.",
+            "Se pasan desde el padre."
+        ],
+        "¿Qué diferencia hay entre componentes controlados y no controlados?": [
+            "Controlados usan state.",
+            "No controlados usan DOM.",
+            "Controlados son más predecibles."
+        ]
     },
+
     "angular": {
-        "¿Qué es un módulo en Angular?":
-            "Un módulo agrupa componentes, servicios y otros módulos para organizar la aplicación.",
-        "¿Qué es un servicio en Angular?":
-            "Clase que proporciona funcionalidad reutilizable y es inyectable en componentes.",
-        "¿Qué es RxJS y cómo se usa?":
-            "Es una librería para programación reactiva con observables para manejar eventos asíncronos.",
-        "¿Qué es el data binding en Angular?":
-            "Sincronización automática de datos entre el modelo y la vista.",
-        "¿Qué son los decoradores en Angular?":
-            "Anotaciones que agregan metadatos a clases y propiedades para configurarlas.",
-        "¿Cómo funcionan los pipes en Angular?":
-            "Transforman datos en plantillas para mostrarlos en un formato adecuado.",
-        "¿Qué es la inyección de dependencias?":
-            "Patrón para suministrar dependencias a clases sin crearlas directamente.",
-        "¿Qué es un componente y cómo se comunica con otros?":
-            "Unidad básica de UI que puede recibir y emitir datos mediante inputs y outputs.",
-        "¿Cómo manejas el enrutamiento en Angular?":
-            "Con el RouterModule, definiendo rutas y navegando entre ellas."
+        "¿Qué es un módulo en Angular?": [
+            "Agrupa partes de la app.",
+            "Organiza componentes y servicios.",
+            "Define bloques funcionales."
+        ],
+        "¿Qué es un servicio en Angular?": [
+            "Clase reutilizable inyectable.",
+            "Contiene lógica compartida.",
+            "Se usa vía DI."
+        ],
+        "¿Qué es RxJS y cómo se usa?": [
+            "Programación reactiva.",
+            "Trabaja con observables.",
+            "Maneja async streams."
+        ],
+        "¿Qué es el data binding en Angular?": [
+            "Sincroniza vista y datos.",
+            "Conecta modelo y template.",
+            "Actualización automática."
+        ],
+        "¿Qué son los decoradores en Angular?": [
+            "Añaden metadatos.",
+            "Configuran clases.",
+            "Definen comportamiento."
+        ],
+        "¿Cómo funcionan los pipes en Angular?": [
+            "Transforman datos en templates.",
+            "Formatean salida.",
+            "Aplican filtros."
+        ],
+        "¿Qué es la inyección de dependencias?": [
+            "Provee dependencias externas.",
+            "Evita instanciación manual.",
+            "Facilita testing."
+        ],
+        "¿Qué es un componente y cómo se comunica con otros?": [
+            "Bloque UI básico.",
+            "Usa inputs y outputs.",
+            "Intercambia datos."
+        ],
+        "¿Cómo manejas el enrutamiento en Angular?": [
+            "Con RouterModule.",
+            "Definiendo rutas.",
+            "Navegando por path."
+        ]
     },
+
     "personal": {
-        "¿Dónde te ves en cinco años?":
-            "Me veo creciendo profesionalmente y aportando valor en proyectos desafiantes.",
-        "¿Cuál es tu mayor fortaleza y debilidad?":
-            "Mi fortaleza es la perseverancia y mi debilidad es que a veces soy muy perfeccionista.",
-        "¿Cómo manejas el estrés o la presión en el trabajo?":
-            "Organizo mis tareas y tomo pausas para mantenerme concentrado.",
-        "Descríbeme una situación en la que hayas tenido que resolver un conflicto.":
-            "Escuché a ambas partes, busqué un acuerdo y mantuve la comunicación abierta.",
-        "¿Por qué quieres trabajar con nosotros?":
-            "Porque admiro su cultura y quiero crecer junto a un equipo talentoso.",
-        "¿Qué te motiva a dar lo mejor de ti?":
-            "El deseo de aprender y superar retos constantemente.",
-        "¿Cómo te mantienes actualizado y mejorando profesionalmente?":
-            "Leo artículos, tomo cursos y participo en comunidades técnicas.",
-        "Cuéntame sobre un error que hayas cometido y cómo lo solucionaste.":
-            "Identifiqué el problema, pedí ayuda y aprendí para no repetirlo.",
-        "¿Prefieres trabajar en equipo o de forma independiente? ¿Por qué?":
-            "Prefiero el equipo porque las ideas se enriquecen colaborando."
+        "¿Dónde te ves en cinco años?": [
+            "Creciendo profesionalmente.",
+            "Con más responsabilidad técnica.",
+            "Aportando valor en proyectos grandes."
+        ],
+        "¿Cuál es tu mayor fortaleza y debilidad?": [
+            "Fortaleza: constancia. Debilidad: perfeccionismo.",
+            "Soy perseverante pero a veces muy detallista.",
+            "Aprendo rápido pero me exijo mucho."
+        ],
+        "¿Cómo manejas el estrés o la presión en el trabajo?": [
+            "Priorizo tareas.",
+            "Organizo tiempos.",
+            "Trabajo por bloques."
+        ],
+        "Descríbeme una situación en la que hayas tenido que resolver un conflicto.": [
+            "Escuché ambas partes.",
+            "Busqué solución común.",
+            "Medié con comunicación."
+        ],
+        "¿Por qué quieres trabajar con nosotros?": [
+            "Por su cultura.",
+            "Por sus proyectos.",
+            "Por oportunidad de crecimiento."
+        ],
+        "¿Qué te motiva a dar lo mejor de ti?": [
+            "Aprender.",
+            "Superar retos.",
+            "Mejorar constantemente."
+        ],
+        "¿Cómo te mantienes actualizado y mejorando profesionalmente?": [
+            "Cursos y lectura.",
+            "Práctica constante.",
+            "Comunidades tech."
+        ],
+        "Cuéntame sobre un error que hayas cometido y cómo lo solucionaste.": [
+            "Analicé causa y corregí.",
+            "Pedí ayuda y aprendí.",
+            "Documenté la solución."
+        ],
+        "¿Prefieres trabajar en equipo o de forma independiente? ¿Por qué?": [
+            "Equipo por sinergia.",
+            "Ambos según tarea.",
+            "Equipo por intercambio de ideas."
+        ]
     }
 }
 
-RESOURCES = {
-    "frontend": [
-        "https://roadmap.sh/frontend",
-        "https://frontendmentor.io",
-        "https://cssbattle.dev",
-    ],
-    "backend": [
-        "https://roadmap.sh/backend",
-        "https://leetcode.com",
-        "https://sqlbolt.com",
-    ],
-    "react": [
-        "https://roadmap.sh/react",
-        "https://react.dev/learn",
-        "https://frontendmentor.io",
-    ],
-    "angular": [
-        "https://roadmap.sh/angular",
-        "https://angular.io/tutorial",
-        "https://rxjs.dev",
-    ],
-}
 MAX_QUESTIONS = 5
 sessions = {}
 
 
+def normalize(text):
+    if isinstance(text, list):
+        text = " ".join(text)
+    text = text.lower()
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
 def similarity(a, b):
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+    return SequenceMatcher(None, normalize(a), normalize(b)).ratio()
 
 def nivel_por_puntaje(avg_score):
     if avg_score >= 0.75:
@@ -303,12 +421,6 @@ def nivel_por_puntaje(avg_score):
     else:
         return "Junior"
 
-def clean_company_name(line: str, max_length=50) -> str:
-    line = re.sub(r"http\S+", "", line)
-    line = re.sub(r"\d+", "", line)
-    line = re.sub(r"[^\w\s.,-]", "", line)
-    line = line.strip()
-    return line[:max_length]
   
 @api.route("/chat", methods=["POST"])
 @jwt_required()
@@ -532,6 +644,10 @@ def chat():
         traceback.print_exc()
         return jsonify({"response": f"Error del servidor: {str(e)}"}), 500
     
+
+
+
+
 def clean_company_name(line: str, max_length=50) -> str:
     line = re.sub(r"http\S+", "", line)  
     line = re.sub(r"\d+", "", line)      
@@ -555,7 +671,7 @@ def extract_postulation_fields(text: str, platform_hint="Unknown") -> dict:
         "role": None,
         "city": None,
         "platform": platform_hint if platform_hint != "Unknown" else "Unknown",
-        "work_type": "Unknown",
+        "work_type":None ,
         "experience": 0,
         "salary": 0,
         "candidates_applied": 0,
@@ -664,32 +780,60 @@ def extract_postulation_fields(text: str, platform_hint="Unknown") -> dict:
             if len(lines) > 1:
                 data["company_name"] = clean_company_name(lines[1])
 
-    exp_match = re.search(r"experiencia.*?(\d+)\s*(meses|años)", full_text)
-    if exp_match:
-        num = int(exp_match.group(1))
-        data["experience"] = num if "meses" in exp_match.group(2) else num * 12
+    exp_patterns = [
+        r"(experiencia mínima|experiencia requerida|se requiere experiencia).*?(\d+)\s*(meses|años)",
+        r"(mínimo de experiencia).*?(\d+)\s*(meses|años)"
+    ]
+
+    for pattern in exp_patterns:
+        exp_match = re.search(pattern, full_text, re.IGNORECASE)
+        if exp_match:
+            num = int(exp_match.group(2))
+            data["experience"] = num if "meses" in exp_match.group(3).lower() else num * 12
+            break
 
     salary_match = re.search(r"(\d{3,5})\s*euros", full_text)
     if salary_match:
         data["salary"] = int(salary_match.group(1))
+    work_type_match = re.search(
+        r"\b(jornada completa|tiempo completo|full[- ]?time|medio tiempo|part[- ]?time|parcial|presencial|remoto|teletrabajo|home office)\b", 
+        full_text, 
+        re.IGNORECASE
+    )
+    if work_type_match:
+        data["work_type"] = work_type_match.group(1).lower()
+    else:
+        data["work_type"] = "Unknown"
+    candidates_patterns = [
+    r"más de (\d+)\s+solicitudes",
+    r"(\d+)\s+candidatos?",
+    r"(\d+)\s+aplicantes?",
+    r"(\d+)\s+postulantes?",
+    r"(\d+)\s+personas interesadas"
+]
 
-    applied_match = re.search(r"más de (\d+)\s+solicitudes", full_text)
-    if applied_match:
-        data["candidates_applied"] = int(applied_match.group(1))
+    for pattern in candidates_patterns:
+        applied_match = re.search(pattern, full_text, re.IGNORECASE)
+        if applied_match:
+            data["candidates_applied"] = int(applied_match.group(1))
+            break
 
-    requirement_keywords = [
-        "se requiere", "tener", "poseer",
-        "estar inscrito", "aptitudes", "habilidades"
-    ]
-    for line in lines:
-        if any(k in line.lower() for k in requirement_keywords):
-            data["requirements"].append(line)
+
+        requirement_keywords = [
+            "se requiere", "tener", "poseer",
+            "estar inscrito", "aptitudes", "habilidades"
+        ]
+        for line in lines:
+            if any(k in line.lower() for k in requirement_keywords):
+                data["requirements"].append(line)
 
     url_match = re.search(r"(https?://[^\s]+)", text)
     if url_match:
         data["postulation_url"] = url_match.group(1)
 
     return data
+
+
 
 @api.route("/ocr-postulation", methods=["POST"])
 @jwt_required()
