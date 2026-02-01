@@ -49,7 +49,7 @@ function Sidebar() {
         <div className="side_bar">
             <div className="header">
                 <div onClick={() => handleNavigation('/')}>
-                    <img width={"220px"} src="/public/img/sycjob_transparent.png" alt="" />
+                    <img width="1000" src="/img/JSB.png" alt="JSB logo" />
                 </div>
                 <br />
             </div>
