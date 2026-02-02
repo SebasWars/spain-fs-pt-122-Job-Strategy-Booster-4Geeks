@@ -10,7 +10,8 @@ import {
     faGear,
     faCircleQuestion,
     faFileLines,
-    faInfoCircle
+    faInfoCircle,
+    faRightFromBracket
 } from "@fortawesome/free-solid-svg-icons";
 
 import { UserContext } from "../hooks/UserContextProvier.jsx";
@@ -18,8 +19,6 @@ import { useNavigate } from "react-router-dom";
 import LoadingScreen from "../components/LoadingScreen";
 
 function Sidebar() {
-
-
     const [loading, setLoading] = useState(false);
     const { logOut } = useContext(UserContext);
     const navigate = useNavigate();
@@ -47,10 +46,8 @@ function Sidebar() {
 
     return (
         <div className="side_bar">
-            <div className="header">
-                <div onClick={() => handleNavigation('/')}>
-                    <img width={"220px"} src="/public/img/sycjob_transparent.png" alt="" />
-                </div>
+            <div className="header" onClick={() => handleNavigation('/')}>
+                <img width="1000" src="/img/JSB.png" alt="JSB logo" />
                 <br />
             </div>
 
@@ -98,20 +95,13 @@ function Sidebar() {
                         onClick={() => handleNavigation("/about")}
                     />
                     <NavBarButton
-                        icon={faGear}
-                        label={"Ajustes"}
-                        to="/settings"
-                        onClick={() => handleNavigation("/settings")}
+                        icon={faRightFromBracket}
+                        label="Logout"
+                        to="#"
+                        onClick={handleLogout}
                     />
-                    <NavBarButton
-                        icon={faCircleQuestion}
-                        label={"Ayuda"}
-                        to="/help"
-                        onClick={() => handleNavigation("/help")}
-                    />
-                    <button className="btn btn-secondary mt-2" onClick={handleLogout}>
-                        Logout
-                    </button>
+
+
                 </div>
             </div>
         </div>
