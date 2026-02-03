@@ -7,8 +7,7 @@ import CVPDFDocument from "./CVPDFDocument";
 const ShareDropdown = ({ cv }) => {
     const [open, setOpen] = useState(false);
     const [pos, setPos] = useState({ top: 0, left: 0 });
-
-    const cvUrl = `${window.location.origin}/cv/${cv.id}`;
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const toggle = (e) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -20,32 +19,51 @@ const ShareDropdown = ({ cv }) => {
     };
 
     const handleEmail = () => {
-        const subject = "";
-        const body = "";
+        const subject = encodeURIComponent(`CV - ${cv?.datos?.nombre || 'Curriculum Vitae'}`);
+        const body = encodeURIComponent(`Hola,\n\nTe comparto mi CV.\n\nSaludos,\n${cv?.datos?.nombre || ''}`);
         const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=&su=${subject}&body=${body}`;
         window.open(gmailUrl, "_blank");
         setOpen(false);
     };
 
     const handleDownloadPDF = async () => {
-        setOpen(false);
+        if (isGenerating) return;
+
+        setIsGenerating(true);
 
         try {
-            // Generar el PDF usando cv.datos
+            console.log("=== DEBUG PDF ===");
+            console.log("CV completo:", cv);
+            console.log("CV.datos:", cv.datos);
+            console.log("Tiene foto?", cv?.datos?.foto ? "SÍ" : "NO");
+            if (cv?.datos?.foto) {
+                console.log("Foto inicia con:", cv.datos.foto.substring(0, 50));
+                console.log("Longitud foto:", cv.datos.foto.length);
+            }
+
             const blob = await pdf(<CVPDFDocument formData={cv.datos} />).toBlob();
 
-            // Crear link de descarga
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `${cv?.datos?.titulo || "CV"}.pdf`;
-            link.click();
 
-            // Limpiar
-            URL.revokeObjectURL(url);
+            const fileName = cv?.datos?.nombre
+                ? `CV_${cv.datos.nombre.replace(/\s+/g, '_')}.pdf`
+                : `${cv?.datos?.titulo || "CV"}.pdf`;
+
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+
+            setOpen(false);
         } catch (error) {
             console.error("Error generando PDF:", error);
-            alert("Error al generar el PDF");
+            alert(`Error al generar el PDF: ${error.message}`);
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -55,6 +73,7 @@ const ShareDropdown = ({ cv }) => {
                 type="button"
                 className="btn-cv-action btn-secondary share-trigger"
                 onClick={toggle}
+                title="Compartir CV"
             >
                 <Share2 size={18} />
             </button>
@@ -63,12 +82,16 @@ const ShareDropdown = ({ cv }) => {
                 <div className="share-menu open">
                     <button className="share-item" onClick={handleEmail}>
                         <Mail size={16} />
-                        <span>Correo electrónico</span>
+                        <span>Enviar por correo</span>
                     </button>
 
-                    <button className="share-item" onClick={handleDownloadPDF}>
+                    <button
+                        className="share-item"
+                        onClick={handleDownloadPDF}
+                        disabled={isGenerating}
+                    >
                         <FileDown size={16} />
-                        <span>Descargar PDF</span>
+                        <span>{isGenerating ? "Generando PDF..." : "Descargar PDF"}</span>
                     </button>
                 </div>
             </PortalDropdown>
