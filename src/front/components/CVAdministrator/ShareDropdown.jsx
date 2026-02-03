@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Share2, Mail, Link2, FileDown } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { Share2, Mail, FileDown } from "lucide-react";
 import PortalDropdown from "./PortalDropdown";
+import { pdf } from "@react-pdf/renderer";
+import CVPDFDocument from "./CVPDFDocument";
 
 const ShareDropdown = ({ cv }) => {
     const [open, setOpen] = useState(false);
@@ -19,35 +20,34 @@ const ShareDropdown = ({ cv }) => {
     };
 
     const handleEmail = () => {
-        const subject = encodeURIComponent(`Te comparto mi CV: ${cv.nombre}`);
-        const body = encodeURIComponent(`Hola,\n\nTe comparto mi CV:\n${cvUrl}\n\nUn saludo.`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        const subject = "";
+        const body = "";
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=&su=${subject}&body=${body}`;
+        window.open(gmailUrl, "_blank");
         setOpen(false);
     };
 
-    const handleWhatsApp = () => {
-        const text = encodeURIComponent(`Te comparto mi CV: ${cvUrl}`);
-        window.open(`https://wa.me/?text=${text}`, "_blank");
-        setOpen(false);
-    };
     const handleDownloadPDF = async () => {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL;
-        const pdfurl = `${backendUrl}/cv/${cv.id}/pdf`;
-        const token = localStorage.getItem("token");
-
-        const response = await fetch(pdfurl, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        window.open(url, "_blank");
         setOpen(false);
-    };
 
+        try {
+            // Generar el PDF usando cv.datos
+            const blob = await pdf(<CVPDFDocument formData={cv.datos} />).toBlob();
+
+            // Crear link de descarga
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `${cv?.datos?.titulo || "CV"}.pdf`;
+            link.click();
+
+            // Limpiar
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error generando PDF:", error);
+            alert("Error al generar el PDF");
+        }
+    };
 
     return (
         <div className="share-dropdown">
@@ -65,10 +65,7 @@ const ShareDropdown = ({ cv }) => {
                         <Mail size={16} />
                         <span>Correo electrónico</span>
                     </button>
-                    <button className="share-item" onClick={handleWhatsApp}>
-                        <FaWhatsapp size={16} />
-                        <span>WhatsApp</span>
-                    </button>
+
                     <button className="share-item" onClick={handleDownloadPDF}>
                         <FileDown size={16} />
                         <span>Descargar PDF</span>
