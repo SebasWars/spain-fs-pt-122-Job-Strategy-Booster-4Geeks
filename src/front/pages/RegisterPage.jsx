@@ -47,7 +47,9 @@ function Registration() {
                     )}
                 </div>
 
-                <div className="img"></div>
+                <div className="img">
+                    <img src="/img/teamss.jpg" alt="" />
+                </div>
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link, useMatch, useNavigate, useParams } from 'react-router-dom';
 import useGetAuthorizationHeader from '../../hooks/useGetAuthorizationHeader';
 import { getPostulationById, removePostulation } from '../../Fetch/postulationFecth';
@@ -12,6 +12,7 @@ import { getRoutes } from '../../Fetch/routeMapFecth';
 import JobDetailsEdit from './JobDetailsEdit';
 
 export default function JobsDetail() {
+    const status = ['Closet', 'Open']
     const { id } = useParams();
     const navigate = useNavigate();
     const isRouteMap = useMatch('/postulations/:id/route-map');
@@ -19,6 +20,9 @@ export default function JobsDetail() {
     const [isEdit, setIsEdit] = useState(false)
     const [postulation, setPostulation] = useState(null);
     const [stages, setStages] = useState([])
+    const { token } = useContext(UserContext);
+    const [editStatus, setEditStatus] = useState("");
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
     const handleDelete = async () => {
         if (!postulation) return;
@@ -48,6 +52,35 @@ export default function JobsDetail() {
         fetchPostulation();
         getRouteMap()
     }, [id]);
+    const handleStatusUpdate = async (e) => {
+        e.preventDefault();
+
+        if (!editStatus) {
+            alert("Please select a status");
+            return;
+        }
+
+        try {
+            await axios.put(
+                `${backendUrl}/postulations/status/${id}`,
+                { postulation_state: editStatus },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            navigate('/postulations');
+
+            setPostulation(prev => ({ ...prev, postulation_state: editStatus }));
+
+            alert("Status updated successfully!");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update status");
+        }
+    };
 
     if (!postulation) return <p>Postulation not found</p>;
 

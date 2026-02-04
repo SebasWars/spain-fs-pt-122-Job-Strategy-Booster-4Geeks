@@ -32,7 +32,6 @@ function SignupForm({ changeForm }) {
     const sendRegister = async (e) => {
         e.preventDefault();
 
-        // Basic validation
         if (form.password !== form.confirmPassword) {
             setError("Your passwords do not match");
             return;
@@ -60,6 +59,7 @@ function SignupForm({ changeForm }) {
                 confirmPassword: "",
                 isAccepted: false,
             });
+            changeForm()
         } catch (err) {
             console.error(err);
             setError("Something went wrong with your registration");
@@ -109,7 +109,7 @@ function SignupForm({ changeForm }) {
                         checked={form.isAccepted}
                         onChange={handleChange}
                     />{" "}
-                    Accept terms and conditions
+                    <p>Accept terms and conditions</p>
                 </label>
 
                 <input className="create_account" type="submit" value="Register" />

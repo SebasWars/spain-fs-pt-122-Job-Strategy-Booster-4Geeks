@@ -10,7 +10,6 @@ import Registration from "./pages/RegisterPage";
 import App from "./pages/App";
 import Curriculums from "./pages/Curriculum";
 import Interview from "./pages/Interview";
-import PerfilUsuario from "./pages/PerfilUsuario";
 import AboutUs from "./pages/AboutUs";
 import AdminCV from "./pages/AdminCV";
 
