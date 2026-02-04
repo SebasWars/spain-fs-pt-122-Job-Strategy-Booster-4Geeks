@@ -54,7 +54,7 @@ export default function Jobs() {
         </div>
 
         <Link to='/img-post'><button className="add_new_postulation" onClick={() => { console.log(postulaciones) }}>Agregar img</button></Link>
-        <Link to='/formulario'><button className="add_new_postulation" onClick={() => { console.log(postulaciones) }}>Agregar</button></Link>
+        <Link to='formulario'><button className="add_new_postulation" onClick={() => { console.log(postulaciones) }}>Agregar</button></Link>
       </div>
       <div className="cards-grid">
         {postulaciones.length > 0 ? (

@@ -22,6 +22,7 @@ import JobsDetail from "./components/JobComponent/JobsDetail.jsx"
 import Stepper from './components/CreateRouteMap.jsx'
 import CreatePostImg from "./components/JobComponent/CreatePostImg.jsx";
 import Entrevista from "./components/status/Entrevista.jsx";
+import JobDetailsEdit from "./components/JobComponent/JobDetailsEdit.jsx";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,21 +33,17 @@ export const router = createBrowserRouter(
       <Route path="postulations">
         <Route index element={<Jobs />} />
         <Route path=":id" element={<JobsDetail />} />
-        <Route path="/postulations/:id/route-map" element={<JobsDetail />} />
         <Route path="formulario" element={<Formulario />} />
+        <Route path="/postulations/:id/route-map" element={<JobsDetail />} />
       </Route>
       <Route path="postulations/:id/create-stepper" element={<Stepper />} />
       <Route path="curriculum" element={<Curriculums />} />
       <Route path="interview" element={<Interview />} />
       <Route path="register" element={<Registration />} />
-
       <Route path="login" element={<LoginForm />} />
       <Route path="perfil" element={<PerfilUsuario />} />
-      <Route path="about" element={<AboutUs />} />
-      {/* <Route path="timeline" element={<ListadoAplicaciones />} /> */}
       <Route path="admin-cv" element={<AdminCV />} />
       <Route path="about" element={<AboutUs />} />
-      <Route path="formulario" element={<Formulario />} />
       <Route path="img-post" element={<CreatePostImg />} />
       <Route path="status-entrevista" element={<Entrevista />} />
 
