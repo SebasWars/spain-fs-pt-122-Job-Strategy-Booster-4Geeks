@@ -4,7 +4,6 @@ set -o errexit
 
 npm install
 npm install axios
-
 npm run build
 
 pipenv install --dev --deploy --ignore-pipfile
