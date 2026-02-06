@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# exit on error
 set -o errexit
 
 npm install
 npm run build
+
+pip install --user pipenv
+export PATH="$HOME/.local/bin:$PATH"
 
 pipenv install --dev --deploy --ignore-pipfile
 psql "$DATABASE_URL" -c "DROP SCHEMA public CASCADE;"
