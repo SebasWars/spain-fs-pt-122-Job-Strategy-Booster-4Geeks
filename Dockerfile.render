@@ -1,20 +1,48 @@
-FROM node:16
+# Stage 1: Build frontend with Node.js
+FROM node:16 AS build
 
+WORKDIR /opt/app
+
+# Copy package files and install node dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy frontend source and build
+COPY . .
+RUN npm run build
+
+# Stage 2: Setup Python environment + Tesseract for backend
+FROM python:3.10-slim
+
+# Install Tesseract and dependencies
 RUN apt-get update && apt-get install -y \
-    software-properties-common \
     tesseract-ocr \
     libtesseract-dev \
     libleptonica-dev \
     pkg-config \
-    python3.10 \
-    python3.10-venv \
-    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/app
 
-# Your existing copy or build steps here
-COPY --from=build /opt/app/venv /venv
+# Copy the built frontend files from previous stage (optional)
+COPY --from=build /opt/app/build ./frontend_build
 
-ENV PATH="/opt/app/venv/bin:$PATH"
-ENV NODE_ENV=container
+# Copy Python requirements files
+COPY Pipfile Pipfile.lock ./
+
+# Install pipenv and dependencies
+RUN pip install --upgrade pip
+RUN pip install pipenv
+RUN pipenv install --deploy --ignore-pipfile
+
+# Copy the entire source code
+COPY . .
+
+# Set environment variables for the Python virtual environment
+ENV PATH="/opt/app/.venv/bin:$PATH"
+
+# Expose the port your Flask app runs on (default 5000)
+EXPOSE 5000
+
+# Start your Flask app using gunicorn (adjust as needed)
+CMD ["pipenv", "run", "gunicorn", "wsgi:app", "--chdir", "src", "--bind", "0.0.0.0:5000"]
