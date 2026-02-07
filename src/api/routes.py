@@ -827,60 +827,64 @@ def extract_postulation_fields(text: str, platform_hint="Unknown") -> dict:
         data["postulation_url"] = url_match.group(1)
 
     return data
-
+import traceback
 
 @api.route("/ocr-postulation", methods=["POST"])
 @jwt_required()
 def ocr_postulation():
-    file = request.files.get("image")
-    if not file:
-        return jsonify({"error": "No image file provided"}), 400
-
-    platform_hint = request.form.get("platform", "Unknown")
-    current_user = get_jwt_identity()
-
-    upload_dir = "uploads"
-    if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir)
-
-    path = os.path.join(upload_dir, file.filename)
     try:
+        file = request.files.get("image")
+        if not file:
+            return jsonify({"error": "No image file provided"}), 400
+
+        platform_hint = request.form.get("platform", "Unknown")
+        current_user = get_jwt_identity()
+
+        upload_dir = "uploads"
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
+
+        path = os.path.join(upload_dir, file.filename)
         file.save(path)
+
         img = Image.open(path)
         text = pytesseract.image_to_string(img)
+        print("OCR Text:", repr(text))
+
+        data = extract_postulation_fields(text, platform_hint=platform_hint)
+
+        requirements = data.get("requirements")
+        if not isinstance(requirements, list):
+            requirements = []
+
+        postulation = Postulations(
+            postulation_state="Open",
+            company_name=data.get("company_name") or "Unknown",
+            role=data.get("role") or "Unknown",
+            experience=data.get("experience", 0),
+            inscription_date=date.today(),
+            city=data.get("city") or "Unknown",
+            salary=data.get("salary", 0),
+            platform=data.get("platform") or "Unknown",
+            postulation_url=data.get("postulation_url") or "",
+            work_type=data.get("work_type") or "Unknown",
+            requirements=requirements,
+            candidates_applied=data.get("candidates_applied") or 0,
+            available_positions=1,
+            job_description=data.get("job_description"),
+            user_id=current_user
+        )
+
+        db.session.add(postulation)
+        db.session.commit()
+
+        return jsonify(postulation.serialize()), 201
+
     except Exception as e:
-        return jsonify({"error": f"OCR or file handling failed: {str(e)}"}), 500
+        print("Error in OCR endpoint:", e)
+        print(traceback.format_exc())
+        return jsonify({"error": "Internal Server Error"}), 500
 
-    print("OCR Text:", repr(text))
-
-    data = extract_postulation_fields(text, platform_hint=platform_hint)
-
-    requirements = data.get("requirements")
-    if not isinstance(requirements, list):
-        requirements = []
-
-    postulation = Postulations(
-        postulation_state="Open",
-        company_name=data.get("company_name") or "Unknown",
-        role=data.get("role") or "Unknown",
-        experience=data.get("experience", 0),
-        inscription_date=date.today(),
-        city=data.get("city") or "Unknown",
-        salary=data.get("salary", 0),
-        platform=data.get("platform") or "Unknown",
-        postulation_url=data.get("postulation_url") or "",
-        work_type=data.get("work_type") or "Unknown",
-        requirements=requirements,
-        candidates_applied=data.get("candidates_applied") or 0,
-        available_positions=1,
-        job_description=data.get("job_description"),
-        user_id=current_user
-    )
-
-    db.session.add(postulation)
-    db.session.commit()
-
-    return jsonify(postulation.serialize()), 201
 
 
 def save_uploaded_file(file, upload_folder=None):
