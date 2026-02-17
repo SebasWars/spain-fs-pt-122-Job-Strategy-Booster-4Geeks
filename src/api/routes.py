@@ -828,6 +828,9 @@ def extract_postulation_fields(text: str, platform_hint="Unknown") -> dict:
 
     return data
 
+OCR_SPACE_API_KEY = "K83519058688957"  
+
+
 
 @api.route("/ocr-postulation", methods=["POST"])
 @jwt_required()
@@ -839,25 +842,25 @@ def ocr_postulation():
     platform_hint = request.form.get("platform", "Unknown")
     current_user = get_jwt_identity()
 
-    upload_dir = "uploads"
-    if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir)
-
-    path = os.path.join(upload_dir, file.filename)
     try:
-        file.save(path)
-        img = Image.open(path)
-        text = pytesseract.image_to_string(img)
-    except Exception as e:
-        return jsonify({"error": f"OCR or file handling failed: {str(e)}"}), 500
+        response = requests.post(
+            'https://api.ocr.space/parse/image',
+            files={'filename': (file.filename, file.stream, file.content_type)},
+            data={'apikey': OCR_SPACE_API_KEY, 'language': 'eng'}
+        )
+        result = response.json()
+        if result.get("IsErroredOnProcessing"):
+            return jsonify({"error": result.get("ErrorMessage", ["OCR API error"])[0]}), 500
 
-    print("OCR Text:", repr(text))
+        parsed_results = result.get("ParsedResults")
+        if not parsed_results:
+            return jsonify({"error": "No text found by OCR"}), 500
+
+        text = parsed_results[0].get("ParsedText", "")
+    except Exception as e:
+        return jsonify({"error": f"OCR API request failed: {str(e)}"}), 500
 
     data = extract_postulation_fields(text, platform_hint=platform_hint)
-
-    requirements = data.get("requirements")
-    if not isinstance(requirements, list):
-        requirements = []
 
     postulation = Postulations(
         postulation_state="Open",
@@ -870,17 +873,23 @@ def ocr_postulation():
         platform=data.get("platform") or "Unknown",
         postulation_url=data.get("postulation_url") or "",
         work_type=data.get("work_type") or "Unknown",
-        requirements=requirements,
+        requirements=data.get("requirements") or [],
         candidates_applied=data.get("candidates_applied") or 0,
         available_positions=1,
         job_description=data.get("job_description"),
         user_id=current_user
     )
 
-    db.session.add(postulation)
-    db.session.commit()
+    try:
+        db.session.add(postulation)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
     return jsonify(postulation.serialize()), 201
+
+
 
 
 def save_uploaded_file(file, upload_folder=None):
@@ -1553,18 +1562,35 @@ def status_count():
 
 
 @api.route("/status", methods=["GET"])
+@jwt_required()
 def status_entrevista_get():
-    entrevista = Stages.query.filter_by(stage_name="hr_interview").count()
-    offer = Stages.query.filter_by(stage_name="offer").count()
+    current_user=get_jwt_identity()
+    entrevista = Stages.query.filter_by(
+        stage_name="hr_interview",
+        user_id=current_user
+    ).count()
+
+    offer = Stages.query.filter_by(
+        stage_name="offer",
+        user_id=current_user
+    ).count()
+
     process_closure = Stages.query.filter_by(
-        stage_name="process_closure").count()
+        stage_name="process_closure",
+        user_id=current_user
+    ).count()
+
     aceptada = Postulations.query.filter_by(
-        postulation_state="aceptada").count()
-    return jsonify({"entrevista": entrevista,
-                    "offer": offer,
-                    "descartado": process_closure,
-                    "aceptada": aceptada
-                    })
+        postulation_state="aceptada",
+        user_id=current_user
+    ).count()
+
+    return jsonify({
+        "entrevista": entrevista,
+        "offer": offer,
+        "descartado": process_closure,
+        "aceptada": aceptada
+    })
 
 
 @api.route("/profile", methods=["GET"])
@@ -1664,7 +1690,7 @@ def get_route_map(id):
 @jwt_required()
 def create_or_replace_route_map(id):
     stage_list = request.get_json()
-
+    current_user=get_jwt_identity()
     if not stage_list or not isinstance(stage_list, list):
         return jsonify({'error': 'Data must be a list of stage objects'}), 400
 
@@ -1698,7 +1724,8 @@ def create_or_replace_route_map(id):
             stage_name=stage_name.strip(),
             stage_completed=bool(stage_data.get('stage_completed', False)),
             date_completed_stage=date_completed_stage,
-            postulation_id=id
+            postulation_id=id,
+            user_id=current_user
         )
 
         db.session.add(stage)
